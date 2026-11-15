@@ -1,6 +1,0 @@
-# Static site: no build, a small Node server for the files below.
-source: false
-artifacts: [index.html, prototypes.html, guapea, shared, arcade83, arcade86, arcade92, neon, pixel, toon, vendor, thumbs, serve.mjs, package.json]
-services:
-  web:
-    command: node serve.mjs

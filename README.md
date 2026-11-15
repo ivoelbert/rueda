@@ -37,7 +37,7 @@ Keys: Space/Enter/Z = the big ¡ENCHUFLA DOBLE! button, 5/C = coin, arrows or A/
 
 ## Running
 
-Run `python3 serve.py 8000` (no caching, for development) or `node serve.mjs` (what the deployment runs) and open http://localhost:8000/.
+Run `python3 serve.py 8000` and open http://localhost:8000/. The site is plain static files, deployed to GitHub Pages from `main`.
 
 URL options:
 - `?beat=18` freezes the clock at a beat. The enchufla doble runs from beat 8 to beat 32.
