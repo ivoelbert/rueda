@@ -1,0 +1,118 @@
+/* Arcade cabinet shared by the coin-op versions. Each era sets the variables. */
+:root {
+  --room: #0d0b12;
+  --cab: #1b1b22;        /* cabinet sides and bezel */
+  --cab-edge: #2c2c36;
+  --trim: #e8c33a;       /* t-molding */
+  --marquee: #000;
+  --panel: #23232c;
+  --panel-art: none;
+  --card-bg: #111;
+  --card-fg: #e8e8e8;
+  --card-accent: #e8c33a;
+  --btn: #e3262b;
+  --btn-dark: #7a0c10;
+  --btn-light: #ff8a7a;
+  --label: #f2f2f2;
+  --font: "Courier New", ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--room); touch-action: manipulation; }
+body { font-family: var(--font); color: var(--label); user-select: none; -webkit-user-select: none; }
+
+.cab { position: fixed; inset: 0; display: flex; flex-direction: column; background:
+  radial-gradient(120% 70% at 50% 40%, var(--cab-edge), var(--cab) 60%, #050507 100%); }
+
+/* Marquee: a backlit sign across the top. */
+.marquee { flex: 0 0 auto; height: clamp(44px, 11vh, 112px); display: flex; justify-content: center; align-items: stretch;
+  background: var(--marquee); border-bottom: 6px solid var(--trim); box-shadow: inset 0 -12px 24px rgba(0, 0, 0, 0.45), 0 4px 0 #000; overflow: hidden; }
+.marquee canvas { height: 100%; width: auto; image-rendering: pixelated; image-rendering: crisp-edges; }
+
+.mid { position: relative; flex: 1 1 auto; min-height: 0; display: flex; justify-content: center; align-items: center; }
+
+/* The monitor: low-res canvas scaled with hard pixels, scanlines, curved glass. */
+.screen { position: relative; border-radius: 2.4% / 3%; overflow: hidden; background: #000;
+  box-shadow: 0 0 0 6px #000, 0 0 0 12px #0a0a0d, 0 0 0 14px var(--trim), 0 10px 40px rgba(0, 0, 0, 0.8); }
+.screen canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; filter: saturate(1.12) contrast(1.06); }
+.scan { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(0, 0, 0, 0) 58%, rgba(0, 0, 0, 0.3) 58%); }
+.glass { position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0) 62%, rgba(0, 0, 0, 0.42) 100%),
+              linear-gradient(155deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0) 38%); }
+
+/* Printed instruction cards on the bezel, beside the monitor. */
+.bezel { position: absolute; top: 50%; transform: translateY(-50%); width: calc(50% - var(--sw) / 2 - 44px); max-width: 300px; }
+.bezel.left { right: calc(50% + var(--sw) / 2 + 30px); }
+.bezel.right { left: calc(50% + var(--sw) / 2 + 30px); }
+.nobezel .bezel { display: none; }
+.card { background: var(--card-bg); color: var(--card-fg); border: 3px solid var(--card-accent); padding: 14px 16px; font-size: 13px; line-height: 1.45;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.6); }
+.card h3 { margin: 0 0 8px; font-size: 15px; letter-spacing: 0.12em; color: var(--card-accent); }
+.card ol { margin: 0; padding-left: 18px; }
+.card li { margin-bottom: 6px; }
+.card b { color: var(--card-accent); }
+.card dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; margin: 0; }
+.card dt { font-weight: 900; color: var(--card-accent); }
+.card dd { margin: 0; }
+.card .fine { margin: 10px 0 0; font-size: 11px; opacity: 0.7; letter-spacing: 0.08em; }
+
+/* Control panel. */
+.panel { flex: 0 0 auto; height: clamp(118px, 21vh, 176px); display: flex; justify-content: center; align-items: center; gap: clamp(18px, 5vw, 64px);
+  background: var(--panel-art), linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.35)), var(--panel);
+  border-top: 6px solid var(--trim); box-shadow: inset 0 10px 18px rgba(0, 0, 0, 0.45); padding: 0 12px; }
+.panel button { cursor: pointer; font-family: inherit; }
+.panel span { display: block; font-size: clamp(9px, 1.5vh, 12px); font-weight: 900; letter-spacing: 0.1em; text-align: center; color: var(--label); text-shadow: 0 1px 0 #000; white-space: nowrap; }
+
+.coin { display: flex; align-items: center; gap: 8px; border: 3px solid #444; background: linear-gradient(#2a2a2a, #121212); border-radius: 6px; padding: 8px 10px; color: var(--label); }
+.coin i { width: 8px; height: 34px; border-radius: 4px; background: #000; box-shadow: inset 0 0 0 2px #c71f1f, 0 0 10px rgba(255, 40, 40, 0.5); }
+.coin span { text-align: left; color: #ff5a4a; }
+
+.stick { position: relative; width: clamp(64px, 11vh, 92px); height: clamp(64px, 11vh, 92px); cursor: pointer; }
+.stick i { position: absolute; left: 50%; bottom: 14%; width: 70%; height: 22%; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(#000 30%, #2a2a2a 70%); }
+.stick b { position: absolute; left: 50%; bottom: 22%; width: 10%; height: 56%; margin-left: -5%; background: linear-gradient(90deg, #888, #eee, #777); border-radius: 4px; transform-origin: 50% 100%; transition: transform 0.08s; z-index: 1; }
+.stick b::after { content: ""; position: absolute; left: 50%; top: -60%; width: 380%; aspect-ratio: 1; transform: translateX(-50%); border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--btn-light), var(--btn) 45%, var(--btn-dark)); box-shadow: 0 3px 6px rgba(0, 0, 0, 0.6); }
+.stick[data-tilt="lead"] b { transform: rotate(-18deg); }
+.stick[data-tilt="follow"] b { transform: rotate(18deg); }
+.stick span { position: absolute; left: 50%; bottom: -14px; transform: translateX(-50%); }
+
+.bigwrap, .smallwrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.big { width: clamp(70px, 12.5vh, 108px); aspect-ratio: 1; border-radius: 50%; border: 5px solid #111;
+  background: radial-gradient(circle at 36% 30%, var(--btn-light), var(--btn) 46%, var(--btn-dark) 100%);
+  box-shadow: 0 7px 0 #000, 0 9px 14px rgba(0, 0, 0, 0.6), inset 0 -6px 10px rgba(0, 0, 0, 0.35); transition: transform 0.05s, box-shadow 0.05s; }
+.big.down { transform: translateY(5px); box-shadow: 0 2px 0 #000, 0 3px 6px rgba(0, 0, 0, 0.6), inset 0 -2px 6px rgba(0, 0, 0, 0.4); }
+.bigwrap span { font-size: clamp(11px, 2vh, 16px); color: var(--card-accent); }
+.small { width: clamp(34px, 6vh, 46px); aspect-ratio: 1; border-radius: 50%; border: 4px solid #111;
+  background: radial-gradient(circle at 36% 30%, #fff, #d8d8d8 45%, #7a7a7a); box-shadow: 0 4px 0 #000; }
+.small.on { background: radial-gradient(circle at 36% 30%, #fff8b0, #ffd23d 45%, #9a7a00); }
+
+.back { position: fixed; top: 6px; left: 8px; z-index: 5; font: 900 11px var(--font); letter-spacing: 0.1em; color: rgba(255, 255, 255, 0.55); text-decoration: none; background: rgba(0, 0, 0, 0.55); padding: 4px 7px; }
+.back:hover { color: #fff; }
+
+@media (max-width: 640px) {
+  /* Keep all four controls at full size side by side; the stick has no
+     in-flow content, so without this it shrinks to nothing. */
+  .panel { gap: 8px; justify-content: space-evenly; padding: 0 6px; }
+  .panel > * { flex-shrink: 0; }
+  .coin { padding: 6px 7px; gap: 6px; }
+  .coin i { height: 26px; }
+  .smallwrap span, .coin span { font-size: 9px; letter-spacing: 0.04em; }
+  .stick { width: clamp(56px, 9vh, 76px); height: clamp(56px, 9vh, 76px); }
+  .stick span { font-size: 9px; letter-spacing: 0.04em; }
+  .big { width: clamp(64px, 11vh, 92px); }
+  .bigwrap span { font-size: 10px; letter-spacing: 0.04em; }
+  /* The marquee art fills the width here, so move the link to the panel. */
+  .back { top: auto; bottom: 4px; left: 6px; font-size: 9px; }
+}
+
+/* Phones held sideways: a slimmer marquee and panel leave room for the screen. */
+@media (max-height: 500px) {
+  .marquee { height: 40px; border-bottom-width: 4px; }
+  .panel { height: 88px; border-top-width: 4px; }
+  .stick { width: 54px; height: 54px; }
+  .big { width: 58px; border-width: 4px; }
+  .bigwrap, .smallwrap { gap: 5px; }
+  .small { width: 32px; }
+  .panel span, .bigwrap span { font-size: 9px; }
+  .stick span { bottom: -10px; }
+}

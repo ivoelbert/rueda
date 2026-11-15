@@ -1,0 +1,4 @@
+node_modules/
+.amp/*
+!.amp/box.yaml
+!.amp/box-deploy.json

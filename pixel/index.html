@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rueda · Pixel</title>
+<link rel="stylesheet" href="../shared/hud.css">
+<style>
+  :root {
+    --font: "Courier New", ui-monospace, monospace;
+    --accent: #f4cc5a;
+    --accent2: #5fc7b8;
+    --panel: #24195a;
+    --btn-bg: #e83b3b;
+    --radius: 0;
+    --border: 3px solid #14101e;
+  }
+  body { background: #0b0a1f; }
+  canvas.stage { image-rendering: pixelated; image-rendering: crisp-edges; }
+  /* Score, beats, calls and judgments are drawn in the canvas with the bitmap font. */
+  .hud-score, .hud-beats, .caller, .judge { display: none; }
+  .hud-nav a, .side-btn { box-shadow: inset -3px -3px 0 rgba(0,0,0,0.35), inset 3px 3px 0 rgba(255,255,255,0.15); text-transform: uppercase; }
+  .hud-nav a.here { background: #e83b3b; color: #fff; }
+  .call-btn { box-shadow: inset -5px -5px 0 #8a1c2c, inset 5px 5px 0 #ff7a6a, 0 0 0 3px #14101e; letter-spacing: 0.04em; }
+  .call-btn:active { box-shadow: inset 5px 5px 0 #8a1c2c, 0 0 0 3px #14101e; }
+  .start { background: rgba(11, 10, 31, 0.6); }
+  .start h1 { color: #f4cc5a; text-shadow: 6px 6px 0 #e83b3b, 12px 12px 0 #14101e; letter-spacing: 0.08em; }
+  .start-btn { box-shadow: inset -5px -5px 0 #8a1c2c, inset 5px 5px 0 #ff7a6a, 0 0 0 3px #14101e; }
+</style>
+</head>
+<body>
+<canvas class="stage" id="stage"></canvas>
+<script type="module" src="main.js"></script>
+</body>
+</html>
