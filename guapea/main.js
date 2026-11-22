@@ -6,7 +6,7 @@
 // presses palms on 5. You are one dancer. Pick a move in the moves library and
 // press Space: the whole rueda dances it from the next 1, then goes back to
 // the guapea.
-import { ChipMusic } from '../shared/chip.js';
+import { Band } from './band.js';
 import { Sprites, hull } from '../shared/sprite.js';
 import { drawText, centerText, textWidth } from '../shared/font.js';
 
@@ -39,7 +39,7 @@ const rng = (seed) => () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(
 // [default, min, max, step, label]. Values live in the URL, so a tuned
 // version can be shared as a link.
 const SPEC = {
-  bpm: [176, 120, 220, 1, 'Tempo (BPM)'],
+  bpm: [196, 120, 220, 1, 'Tempo (BPM)'],
   bounce: [1, 0, 2.5, 0.05, 'Knee bounce'],
   hips: [1, 0, 2.5, 0.05, 'Hips'],
   step: [1, 0.3, 2, 0.05, 'Step size'],
@@ -530,8 +530,7 @@ function buildPlaza() {
 }
 
 // ------------------------------------------------------------ game state
-const music = new ChipMusic(P.bpm, 'fm');
-music.layers = { band: true, melody: true };
+const music = new Band(P.bpm);
 let frozen = q.has('beat') ? +q.get('beat') : null;
 const beatNow = () => frozen ?? music.beat();
 const state = {
