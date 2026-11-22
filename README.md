@@ -12,8 +12,6 @@ The moves library on the left lists the calls. Pick one and press Space (or tap 
 
 Moves live in `MOVES` in `guapea/main.js`. Each one gives the lead and the follow a root path around the circle (places traveled, distance from the center, turn), pelvis and footstep keys per count, and how many places the girls move on (`shift`). The hands for a move are scripted in `hands()`.
 
-The band (`guapea/band.js`) is a salsa conjunto on an FM sound chip, at 196 BPM by default. Each 8-count is one cycle of 2-3 son clave over C F G7 F, two counts per chord. It has an anticipated bass tumbao, a piano montuno in octaves, a conga tumbao with open tones on 4 and 4&, bongo bell, güiro, and a horn mambo over a four-measure loop with a timbal fill.
-
 - Keys: Space = call the selected move, ▲ ▼ or 1-9 = pick a move, ◄ ► = lead/follow, S = ½× speed, M = mute, T = the tune panel.
 - The tune panel's sliders (tempo, bounce, hips, step size, arm swing, styling, timing, springiness, looseness, couples) are saved in the URL, so a tuned version can be shared as a link.
 - URL options: `?beat=N` freezes the clock at a beat (count 1 is beat 0), `?call=dame` queues that move for the second measure (beats 8 to 16), `?play=1` skips the title, `?role=follow`, `?move=dame` selects a move.
