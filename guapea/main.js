@@ -77,7 +77,8 @@ const FOOT_I_F = FOOT_I.map(([b, f, , lift]) => [b, f, 0, lift]); // she doesn't
 //   pelvis, angle: as in the guapea.
 //   O, I    footsteps [beat, forward in steps, inward px, lift px], placed
 //           relative to the body where the foot lands.
-// shift is how many places the leaders move on by the end (a dame is 1).
+// shift is how many places clockwise the girls move on by the end, so each
+// lead has a new partner (a dame is 1).
 const STILL = [[0, 0, 0, 0], [8, 0, 0, 0]];
 const GUAPEA = {
   name: 'GUAPEA', shift: 0,
@@ -90,25 +91,25 @@ const GUAPEA = {
 const MOVES = {
   dame: {
     id: 'dame', name: 'DAME', say: '¡Dame!', shift: 1,
-    blurb: 'Dile que no with the girl on your right. Everyone changes partner and the wheel turns.',
-    // He lets go on 1 and turns right to face the center as he goes to the
-    // next girl, takes her hand on the 4, then breaks back and opens to his
-    // left while she crosses in front of him.
+    blurb: 'Dile que no with the girl on your right. The girls move on one place, so everyone has a new partner.',
+    // On 1 he lets go, turns right to face the center and steps in toward
+    // the girl on his right, his right hand on her back. 2-3 he settles back;
+    // on 5-6-7 he opens to his left while she crosses in front of him.
     lead: {
-      root: [[0, 0, 0, 0], [1, 0.1, 0, -35], [2, 0.23, 0.5, -75], [3, 0.3, 1.2, -90], [4, 0.34, 2, -92], [5, 0.39, 3.2, -80], [6, 0.45, 2.5, -45], [7, 0.5, 0.5, -6], [8, 0.5, 0, 0]],
-      pelvis: [[0, -1], [1, -0.35], [2, 0], [4, -0.6], [5, -0.2], [6, 0]],
+      root: [[0, 0, 0, 0], [0.5, 0.06, -1.6, -78], [1, 0.09, -2.8, -100], [2, 0.08, -2, -96], [3, 0.06, -0.8, -92], [4, 0.05, -0.4, -88], [5, 0.04, 1, -70], [6, 0.02, 1.2, -35], [7, 0.005, 0.3, -6], [8, 0, 0, 0]],
+      pelvis: [[0, 0.7], [1, 0.1], [2, 0], [4, -0.4], [5, -0.1], [6, 0]],
       angle: [[0, 0]],
-      O: [[0, -1, 0, 2.6], [2, 0, 0, 2.8], [5, 0, 0, 2.2], [7, 0, 0, 1.3]],
-      I: [[1, 0, 0, 2.4], [3, 0.15, 0, 1.5], [4, -0.5, 0, 2.4], [6, 0, 0, 2.2]],
+      O: [[0, 0.5, 0, 2.8], [2, 0, 0, 2.2], [5, 0, 0, 2], [7, 0, 0, 1.3]],
+      I: [[1, 0, 0, 1.6], [3, 0, 0, 1.2], [4, -0.4, 0, 2.4], [6, 0, 0, 2.2]],
     },
-    // She rocks back on 1 and turns left in place to face the center, walks
-    // across in front of him on 5-6, and spins half a turn left on 7 to face
-    // him: one full turn in all.
+    // She steps back into his hand on 1 with her left arm up and turns left
+    // to face the center beside him, then on 5-6-7 crosses in front of him,
+    // turning left all the way round to face him.
     follow: {
-      root: [[0, 0, 0, 0], [1, -0.01, 0.5, 15], [2, -0.03, 0, 50], [3, -0.06, -1.5, 90], [4, -0.1, -3, 120], [5, -0.24, -6.5, 180], [6, -0.39, -4.5, 260], [7, -0.49, -1, 345], [8, -0.5, 0, 360]],
+      root: [[0, 0, 0, 0], [1, -0.12, -1.8, 20], [2, -0.13, -2.2, 55], [3, -0.2, -3, 90], [4, -0.27, -4.5, 125], [5, -0.5, -6.5, 190], [6, -0.8, -4.5, 275], [7, -0.97, -0.8, 345], [8, -1, 0, 360]],
       pelvis: [[0, -1], [1, -0.3], [2, 0.2], [4, 0.6], [5, 0.4], [6, 0]],
       angle: [[0, 0]],
-      O: [[0, -1, 0, 2.6], [2, 0.2, 0, 2.6], [5, 0, 0, 2.2], [7, 0, 0, 1.3]],
+      O: [[0, -0.5, 0, 2.6], [2, 0.2, 2.5, 2.6], [5, 0, 0, 2.2], [7, 0, 0, 1.3]],
       I: [[1, 0, 0, 2.2], [3, 0.15, 0, 1.5], [4, 0.4, 0, 2.6], [6, 0, 0, 2.4]],
     },
   },
@@ -214,7 +215,8 @@ const dancers = () => leads.concat(follows);
 
 function build() {
   const n = P.couples;
-  R = 26 + n * 7;
+  // A tight circle: the next couple is about as close as your partner.
+  R = (n * (DIST + 24)) / TAU;
   SLOT = TAU / n;
   leads = []; follows = [];
   timeline.clear(); baseShift = 0;
@@ -242,11 +244,12 @@ function build() {
 }
 
 // Where a dancer's body is at beat b: a spot on the floor and a heading. The
-// home spot turns around the center by half a place per partner change.
+// leads keep their places; a follow's home spot moves on one place clockwise
+// per partner change.
 function root(d, b) {
   const m = Math.floor(b / 8);
   const [along, out, turn] = evalRoot(figureAt(m)[d.role].root, b - m * 8);
-  const a = (shiftBefore(m) * 0.5 * (d.lead ? 1 : -1) + along) * SLOT, c = Math.cos(a), s = Math.sin(a);
+  const a = ((d.lead ? 0 : -shiftBefore(m)) + along) * SLOT, c = Math.cos(a), s = Math.sin(a);
   const x = d.home.x * c - d.home.y * s, y = d.home.x * s + d.home.y * c, r = Math.hypot(x, y);
   const h = d.h0 + a + turn * DEG;
   return { x: x + (x / r) * out, y: y + (y / r) * out, h, f: { x: Math.cos(h), y: Math.sin(h) }, l: { x: -Math.sin(h), y: Math.cos(h) } };
@@ -301,7 +304,7 @@ function body(d, b) {
 // Each hand gets a target for this frame (a grip it shares with a partner,
 // a spot on the partner's back, or its own rest spot), then IK reaches for it.
 const REACH = (ARM[0] + ARM[1]) * 0.97;
-let palms = [], grips = [];
+let palms = [];
 
 // If the bodies are too far apart, slide the grip toward the shoulders.
 function reachable(p, a, b) {
@@ -337,7 +340,7 @@ function styled(B, t) {
 function hands(b) {
   const n = P.couples, m = Math.floor(b / 8), t = b - m * 8, s = shiftBefore(m);
   const aim = (B, O, I) => { B.aim = { O, I }; };
-  palms = []; grips = [];
+  palms = [];
   if (!figureAt(m).shift) {
     // Guapea: the free palms meet on 5.
     const press = track(PRESS, t, 0.42, 0, inOut);
@@ -350,23 +353,26 @@ function hands(b) {
     }
     return;
   }
-  // Dame: let go on 1, take the next girl's hand on the 4, his right hand on
-  // her back while she crosses, then back into the guapea grip.
-  const wOld = 1 - ramp(t, 0.3, 0.85), wNew = ramp(t, 2.4, 3.5), toGuapea = ramp(t, 5.6, 6.8);
-  const wBack = ramp(t, 3.2, 3.9) * (1 - ramp(t, 5.8, 6.6)), up = bump(t, 5.3, 6, 7.3);
+  // Dame: on 1 everyone lets go, his right hand goes to the back of the girl
+  // on his right and she puts her left arm up, lowering it by 3. On 5 his
+  // left hand takes her right as she turns across in front of him, and the
+  // grip settles into the guapea by 8.
+  const wOld = 1 - ramp(t, 0, 0.35), wBack = ramp(t, 0, 0.3) * (1 - ramp(t, 4.6, 5.4));
+  const wNew = ramp(t, 3.6, 4.1), toGuapea = ramp(t, 6, 7.6), up = ramp(t, 0, 0.3) * (1 - ramp(t, 1.2, 2));
   const old = [], neu = [];
   for (let i = 0; i < n; i++) {
     const L = leads[i].pose, Fo = follows[mod(i + s, n)].pose, Fn = follows[mod(i + s + 1, n)].pose;
     old[i] = guapeaGrip(L, Fo, t);
-    neu[i] = toGuapea > 0 ? mix(crossGrip(L, Fn, t), guapeaGrip(L, Fn, t), toGuapea) : crossGrip(L, Fn, t);
-    grips.push(neu[i]);
-    const back = v3(Fn.pelvis.x - Fn.f.x * 2.6, Fn.pelvis.y - Fn.f.y * 2.6, Fn.pz + 3.5);
+    neu[i] = mix(crossGrip(L, Fn, t), guapeaGrip(L, Fn, t), toGuapea);
+    const back = Fn.Lw(Fn.nf - 2.4, Fn.ns - Fn.d.sO * 1.5, Fn.pz + 4.5); // her left shoulder blade
     aim(L, mix(mix(rest(L, L.d.sO), old[i], wOld), neu[i], wNew), mix(styled(L, t), back, wBack));
   }
   for (let j = 0; j < n; j++) {
     const F = follows[j].pose, sO = F.d.sO;
-    const high = F.Lw(F.nf + 0.5, F.ns - sO * 3, F.head.z + 5);
-    aim(F, mix(mix(rest(F, sO), old[mod(j - s, n)], wOld), neu[mod(j - s - 1, n)], wNew), mix(styled(F, t), high, up * clamp(P.style * F.d.style, 0, 1)));
+    // Her shoulder lifts with the arm so the hand clears her head.
+    F.shI = add(F.shI, v3(0, 0, 2 * up));
+    const high = F.Lw(F.nf + 0.5, F.ns - sO * (F.d.shW + 3), F.head.z + 9);
+    aim(F, mix(mix(rest(F, sO), old[mod(j - s, n)], wOld), neu[mod(j - s - 1, n)], wNew), mix(styled(F, t), high, up));
   }
 }
 
@@ -497,7 +503,7 @@ function buildPlaza() {
   ringPixels = [];
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const sx = x - OX, sy = OY - y, wx = (sx + 2 * sy) / 2, wy = (2 * sy - sx) / 2, r = Math.hypot(wx, wy);
-    const light = clamp(1.08 - (r / (R * 1.85)) ** 2, 0.04, 1);
+    const light = clamp(1.08 - (r / ((R + 30) * 1.85)) ** 2, 0.04, 1);
     const level = (ramp) => ramp[clamp(Math.floor(light * (ramp.length - 1) + BAYER[(y & 3) * 4 + (x & 3)]), 0, ramp.length - 1)];
     const fx = mod(wx, T), fy = mod(wy, T), i = Math.floor(wx / T), j = Math.floor(wy / T);
     let c = (i + j) & 1 ? level(TILE_A) : level(TILE_B);
@@ -546,29 +552,14 @@ function puff(p, n, color = '#d8b088', speed = 14) {
     particles.push({ x: s.x, y: s.y, vx: Math.cos(a) * speed * (0.5 + Math.random()), vy: Math.sin(a) * speed * 0.4 - 4, g: 10, life: 0.35 + Math.random() * 0.2, c: color });
   }
 }
-function burst(p, n, colors) {
-  const s = proj(p);
-  for (let i = 0; i < n; i++) {
-    const a = (i / n) * TAU;
-    particles.push({ x: s.x, y: s.y, vx: Math.cos(a) * 46, vy: Math.sin(a) * 30 - 10, g: 60, life: 0.45, c: colors[i % colors.length] });
-  }
-}
 
 // Things that happen on a count: dust under the feet, and in a move, the
-// catch on 4, the whoosh of her spin and the landing on the next 1.
+// whoosh of her turn and the landing on the next 1.
 function onBeat(k) {
   const c = mod(k, 8), m = Math.floor(k / 8), fig = figureAt(m), me = player();
   for (const d of dancers()) {
     const mine = d === me && state.mode === 'play';
     if (c === 0 || c === 4 || (mine && [1, 2, 5, 6].includes(c))) puff(c === 0 || c === 2 || c === 5 ? d.pose.ankleO : d.pose.ankleI, mine ? 4 : 2);
-  }
-  const m0 = music.ctx ? music.ctx.currentTime + 0.005 : 0;
-  if (fig.shift && c === 3) {
-    for (const g of grips) burst(g, 8, ['#fff8d0', '#f8d040', '#ffffff']);
-    if (m0) {
-      music.noiseHit(m0, music.noise, 0.07, 0.45, 1, ['bandpass', 1300, 0.9]);
-      music.noiseHit(m0 + 0.012, music.noise, 0.09, 0.3, 1.2, ['bandpass', 2200, 1.2]);
-    }
   }
   if (fig.shift && c === 6) music.sfx('whoosh');
   if (c === 0 && figureAt(m - 1).shift) {
@@ -722,13 +713,14 @@ function hud(b, t, cnt) {
     drawText(ctx, `IN ${left}`, W - 8 - textWidth(`IN ${left}`), 24, '#c0a888', 1, OUTLINE);
   }
 
-  // The move's name on its 1; otherwise a big 1 and 5 in the middle.
+  // The move's name over the circle on its 1; otherwise a big 1 and 5 in
+  // the middle of the circle.
   if (fig.shift && t < 1.2) {
     const s = t < 0.08 ? 5 : 4;
-    if (t < 0.6 || Math.floor(b * 6) % 2 === 0) centerText(ctx, `¡${fig.name}!`, OY - 20 - (s - 4) * 2, GOLD, s, OUTLINE, { shadow: OUTLINE });
+    if (t < 0.6 || Math.floor(b * 6) % 2 === 0) centerText(ctx, `¡${fig.name}!`, 12 - (s - 4) * 2, GOLD, s, OUTLINE, { shadow: OUTLINE });
   } else if ((cnt === 0 || cnt === 4) && t % 4 < 0.45) {
     const s = t % 4 < 0.08 ? 5 : 4;
-    centerText(ctx, String(cnt + 1), OY - 18 - (s - 4) * 2, cnt === 0 ? GOLD : CREAM, s, OUTLINE, { shadow: OUTLINE });
+    centerText(ctx, String(cnt + 1), OY - 28 - (s - 4) * 3, cnt === 0 ? GOLD : CREAM, s, OUTLINE, { shadow: OUTLINE });
   }
 
   // The count strip.
@@ -745,13 +737,14 @@ function hud(b, t, cnt) {
   drawText(ctx, state.half ? '½× PRÁCTICA' : '', 8, H - 10, '#a8e878', 1, OUTLINE);
   const idle = !next && !fig.shift && b - Math.max(state.calledAt, state.startedAt) > 12;
   if (idle && Math.floor(b * 2) % 2 === 0) centerText(ctx, `SPACE: CALL ¡${MOVES[state.move].name}!`, H - 33, CREAM, 1, OUTLINE);
-  if (b - state.startedAt < 4 && b - state.startedAt >= 0) centerText(ctx, '¡A BAILAR!', OY - 20, GOLD, 4, OUTLINE, { shadow: OUTLINE });
+  if (b - state.startedAt < 4 && b - state.startedAt >= 0) centerText(ctx, '¡A BAILAR!', 12, GOLD, 4, OUTLINE, { shadow: OUTLINE });
 }
 
 const ROLE_HIT = { lead: [W / 2 - 92, W / 2 - 28], follow: [W / 2 + 22, W / 2 + 96] };
 function title(b) {
-  centerText(ctx, 'RUEDA', OY - 40, GOLD, 5, OUTLINE, { shadow: OUTLINE });
-  centerText(ctx, 'DE CASINO', OY - 2, CREAM, 2, OUTLINE);
+  // Above and below the circle, so the dancers show.
+  centerText(ctx, 'RUEDA', 4, GOLD, 5, OUTLINE, { shadow: OUTLINE });
+  centerText(ctx, 'DE CASINO', H - 56, CREAM, 2, OUTLINE);
   const blink = Math.floor(b) % 2 === 0;
   const sel = (role, text, x) => drawText(ctx, text, x, H - 34, state.role === role ? (blink ? GOLD : '#f8d040') : '#7a6a60', 2, OUTLINE);
   sel('lead', '◄ LEAD', ROLE_HIT.lead[0]);
