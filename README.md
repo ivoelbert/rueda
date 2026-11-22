@@ -2,17 +2,23 @@
 
 An arcade rueda de casino game.
 
-## Guapea (current)
+## Guapea and the moves library (current)
 
-`guapea/` is an isometric pixel rueda that dances the guapea in unison, tuned for feel rather than accuracy. You are one dancer: tap Space (or click) on 1 and 5 to build sabor. The root page opens it.
+`guapea/` is an isometric pixel rueda that dances the guapea in unison, tuned for feel rather than accuracy. The root page opens it.
 
-- Keys: Space = tap, ◄ ► = lead/follow, S = ½× speed, M = mute, T = the tune panel.
+The moves library on the left lists the calls. Pick one and press Space (or tap the game): the whole rueda dances it from the next 1, then goes back to the guapea. A second call can be queued while a move is running. So far there is one move:
+
+- **Dame**: every lead lets go, walks counterclockwise to the girl on his right and takes her through a dile que no. Everyone changes partner and the wheel turns.
+
+Moves live in `MOVES` in `guapea/main.js`. Each one gives the lead and the follow a root path around the circle (places traveled, distance from the center, turn), pelvis and footstep keys per count, and how many places the leads move on (`shift`). The hands for a move are scripted in `hands()`.
+
+- Keys: Space = call the selected move, ▲ ▼ or 1-9 = pick a move, ◄ ► = lead/follow, S = ½× speed, M = mute, T = the tune panel.
 - The tune panel's sliders (tempo, bounce, hips, step size, arm swing, styling, timing, springiness, looseness, couples) are saved in the URL, so a tuned version can be shared as a link.
-- URL options: `?beat=N` freezes the clock at a beat (count 1 is beat 0), `?play=1` skips the title, `?role=follow`, `?sabor=0..1`.
+- URL options: `?beat=N` freezes the clock at a beat (count 1 is beat 0), `?call=dame` queues that move for the second measure (beats 8 to 16), `?play=1` skips the title, `?role=follow`, `?move=dame` selects a move.
 
 Everything below is the earlier work, listed at `prototypes.html`.
 
-## Coin-op cabinets (current)
+## Coin-op cabinets
 
 - `arcade83/`: an early-80s vertical maze board (224x288). Top-down rueda, Namco-style wavetable band.
 - `arcade86/`: a mid-80s sports coin-op (256x224). Wooden stage, bleachers, lamp scoreboard, NES-style band.

@@ -3,12 +3,33 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>RUEDA · Guapea</title>
+<title>RUEDA · Moves</title>
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: #0e080b; touch-action: manipulation; }
-  body { display: flex; align-items: center; justify-content: center; font: 12px/1.4 "Courier New", ui-monospace, monospace; color: #f2e6cc; user-select: none; -webkit-user-select: none; }
+  body { display: flex; font: 12px/1.4 "Courier New", ui-monospace, monospace; color: #f2e6cc; user-select: none; -webkit-user-select: none; }
+  #stage { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; }
   canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; cursor: pointer; }
   button { font: 900 11px "Courier New", ui-monospace, monospace; letter-spacing: 0.1em; cursor: pointer; }
+
+  /* Moves library: pick a move, Space calls it on the next 1. */
+  #moves { flex: 0 0 236px; display: flex; flex-direction: column; padding: 12px 10px 12px 12px; background: #1c1016; border-right: 3px solid #e8b048; box-shadow: 4px 0 0 #000; overflow-y: auto; }
+  #moves h2 { margin: 0 0 2px; font-size: 13px; letter-spacing: 0.14em; color: #f8d040; }
+  #moves > p { margin: 0 0 10px; color: #c0a888; font-size: 11px; }
+  #moves ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  #moves li button { width: 100%; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 4px 8px; padding: 8px 9px; text-align: left;
+    color: #f2e6cc; background: #24121a; border: 2px solid #5a3a2a; box-shadow: 3px 3px 0 #000; }
+  #moves li button:hover { border-color: #c08a3a; }
+  #moves li button.on { background: #3a1e24; border-color: #f8d040; }
+  #moves kbd { font: 900 10px "Courier New", monospace; padding: 1px 5px; color: #1c1016; background: #c0a888; }
+  #moves .on kbd { background: #f8d040; }
+  #moves b { font-size: 14px; letter-spacing: 0.12em; }
+  #moves .on b { color: #f8d040; }
+  #moves i { font-style: normal; font-size: 10px; color: #1c1016; background: #a8e878; padding: 0 4px; letter-spacing: 0.1em; }
+  #moves i:empty { display: none; }
+  #moves small { grid-column: 1 / -1; color: #c0a888; font-size: 11px; letter-spacing: 0; font-weight: 400; line-height: 1.35; }
+  #moves .keys { margin-top: auto; padding-top: 12px; color: #8a7868; font-size: 11px; }
+  #moves .keys b { font-size: 11px; color: #c0a888; letter-spacing: 0.06em; }
+
   #tuneBtn { position: fixed; right: 10px; bottom: 10px; z-index: 2; padding: 6px 10px; color: #f2e6cc; background: #24121a; border: 2px solid #c08a3a; box-shadow: 3px 3px 0 #000; }
   #tuneBtn:hover { background: #3a1e24; }
   #tune { position: fixed; top: 10px; right: 10px; z-index: 3; width: 270px; max-height: calc(100% - 64px); overflow: auto; padding: 12px 14px 14px;
@@ -22,17 +43,31 @@
   #tune .buttons button { flex: 1; padding: 6px 4px; color: #1c1016; background: #f8d040; border: 0; box-shadow: 2px 2px 0 #000; }
   #tune .buttons button[data-reset] { background: #c0a888; }
   #tune .keys { margin-top: 12px; color: #c0a888; font-size: 11px; }
+
+  /* Phones: the library becomes a strip under the game. */
+  @media (max-width: 700px) {
+    body { flex-direction: column-reverse; }
+    #moves { flex: 0 0 auto; max-height: 38vh; border-right: 0; border-top: 3px solid #e8b048; box-shadow: none; padding: 10px; }
+    #moves > p, #moves .keys { display: none; }
+    #tuneBtn { top: 10px; bottom: auto; }
+  }
 </style>
 </head>
 <body>
-<canvas id="screen" width="400" height="225"></canvas>
+<aside id="moves">
+  <h2>MOVES</h2>
+  <p>Pick a move, then press SPACE. The rueda dances it from the next 1.</p>
+  <ol></ol>
+  <div class="keys"><b>SPACE</b> call it · <b>▲ ▼</b> or <b>1-9</b> pick · <b>◄ ►</b> lead/follow · <b>S</b> ½× speed · <b>M</b> mute · <b>T</b> tune</div>
+</aside>
+<main id="stage"><canvas id="screen" width="400" height="225"></canvas></main>
 <button id="tuneBtn" title="T">TUNE</button>
 <aside id="tune" hidden>
   <h2>TUNE THE FEEL</h2>
-  <p>Move the sliders while it plays until the guapea feels right, then copy the link and send it to me.</p>
+  <p>Move the sliders while it plays until it feels right, then copy the link and send it to me.</p>
   <div class="rows"></div>
   <div class="buttons"><button data-copy>COPY LINK</button><button data-reset>RESET</button></div>
-  <div class="keys">SPACE tap on 1 and 5 · ◄ ► lead/follow · S ½× speed · M mute · T this panel</div>
+  <div class="keys">SPACE call the move · ◄ ► lead/follow · S ½× speed · M mute · T this panel</div>
 </aside>
 <script type="module" src="main.js"></script>
 </body>
