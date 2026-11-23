@@ -8,7 +8,7 @@ An arcade rueda de casino game.
 
 The moves library on the left lists the calls. Pick one and press Space (or tap the game): the whole rueda dances it from the next 1, then goes back to the guapea. A second call can be queued while a move is running. So far there is one move:
 
-- **Dame**: a dile que no with the girl on your right. On 1 every lead lets go, turns to face the center and steps in with his right hand on her back while she steps back with her left arm up (down by the 3). On 5 his left hand takes her right and she crosses in front of him, turning left to face him. The leads keep their places and the girls move on one place, so everyone has a new partner.
+- **Dame**: a dile que no with the girl on your right. On 1 every lead lets go, turns to face the center and steps in, and the girl on his right turns half round to her left into his arms: his right hand on her back, her left arm up and then over onto his back by the 3. On 5 his left hand takes her right and she crosses in front of him, turning on 6 to face him, so everyone is home by 7. The leads keep their places and the girls move on one place, so everyone has a new partner.
 
 Moves live in `MOVES` in `guapea/main.js`. Each one gives the lead and the follow a root path around the circle (places traveled, distance from the center, turn), pelvis and footstep keys per count, and how many places the girls move on (`shift`). The hands for a move are scripted in `hands()`.
 

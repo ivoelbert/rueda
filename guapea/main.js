@@ -93,20 +93,22 @@ const MOVES = {
     id: 'dame', name: 'DAME', say: '¡Dame!', shift: 1,
     blurb: 'Dile que no with the girl on your right. The girls move on one place, so everyone has a new partner.',
     // On 1 he lets go, turns right to face the center and steps in toward
-    // the girl on his right, his right hand on her back. 2-3 he settles back;
-    // on 5-6-7 he opens to his left while she crosses in front of him.
+    // the girl on his right, taking her into a closed hold. 2-3 he settles
+    // back; on 5-6-7 he turns back to his left while she crosses in front of
+    // him, and he is home by 7.
     lead: {
-      root: [[0, 0, 0, 0], [0.5, 0.06, -1.6, -78], [1, 0.09, -2.8, -100], [2, 0.08, -2, -96], [3, 0.06, -0.8, -92], [4, 0.05, -0.4, -88], [5, 0.04, 1, -70], [6, 0.02, 1.2, -35], [7, 0.005, 0.3, -6], [8, 0, 0, 0]],
+      root: [[0, 0, 0, 0], [0.5, 0.06, -1.8, -90], [1, 0.1, -3, -110], [2, 0.09, -2.6, -108], [3, 0.08, -2, -106], [4, 0.07, -1.6, -104], [5, 0.03, -0.6, -50], [6, 0, 0, 0], [8, 0, 0, 0]],
       pelvis: [[0, 0.7], [1, 0.1], [2, 0], [4, -0.4], [5, -0.1], [6, 0]],
       angle: [[0, 0]],
       O: [[0, 0.5, 0, 2.8], [2, 0, 0, 2.2], [5, 0, 0, 2], [7, 0, 0, 1.3]],
       I: [[1, 0, 0, 1.6], [3, 0, 0, 1.2], [4, -0.4, 0, 2.4], [6, 0, 0, 2.2]],
     },
-    // She steps back into his hand on 1 with her left arm up and turns left
-    // to face the center beside him, then on 5-6-7 crosses in front of him,
-    // turning left all the way round to face him.
+    // On 1 she lets go and turns half round to her left, into his arms, face
+    // to face and a little to his right, her left arm going up and over onto
+    // his back. On 5 she walks across in front of him, on 6 she turns half
+    // round to her left, and on 7 she is home, facing him.
     follow: {
-      root: [[0, 0, 0, 0], [1, -0.12, -1.8, 20], [2, -0.13, -2.2, 55], [3, -0.2, -3, 90], [4, -0.27, -4.5, 125], [5, -0.5, -6.5, 190], [6, -0.8, -4.5, 275], [7, -0.97, -0.8, 345], [8, -1, 0, 360]],
+      root: [[0, 0, 0, 0], [0.5, -0.13, -3, 150], [1, -0.252, -6.1, 186], [2, -0.266, -6.1, 188], [3, -0.281, -5.8, 190], [4, -0.295, -5.7, 192], [4.5, -0.493, -9.6, 182], [5, -0.731, -5.4, 195], [5.7, -0.98, -0.3, 352], [6, -1, 0, 360], [8, -1, 0, 360]],
       pelvis: [[0, -1], [1, -0.3], [2, 0.2], [4, 0.6], [5, 0.4], [6, 0]],
       angle: [[0, 0]],
       O: [[0, -0.5, 0, 2.6], [2, 0.2, 2.5, 2.6], [5, 0, 0, 2.2], [7, 0, 0, 1.3]],
@@ -322,10 +324,10 @@ function guapeaGrip(L, F, t) {
   return reachable(v3(m.x + o.x * jo, m.y + o.y * jo, jz), L.shO, F.shO);
 }
 // The dile que no grip: chest high, a little inside the circle, lifted for
-// her spin on 7.
+// her turn on 6.
 function crossGrip(L, F, t) {
   const m = mix(L.shO, F.shO, 0.5), o = norm(v3(m.x, m.y, 0));
-  const z = 13 - (L.dp + F.dp) / 2 + 3.5 * bump(t, 5.4, 6.4, 7.4) * P.arms;
+  const z = 13 - (L.dp + F.dp) / 2 + 3.5 * bump(t, 4.6, 5.3, 6) * P.arms;
   return reachable(v3(m.x - o.x * 3, m.y - o.y * 3, z), L.shO, F.shO);
 }
 // Free hands: bent at the elbow in front of the chest, swinging against the step.
@@ -353,12 +355,14 @@ function hands(b) {
     }
     return;
   }
-  // Dame: on 1 everyone lets go, his right hand goes to the back of the girl
-  // on his right and she puts her left arm up, lowering it by 3. On 5 his
-  // left hand takes her right as she turns across in front of him, and the
-  // grip settles into the guapea by 8.
-  const wOld = 1 - ramp(t, 0, 0.35), wBack = ramp(t, 0, 0.3) * (1 - ramp(t, 4.6, 5.4));
-  const wNew = ramp(t, 3.6, 4.1), toGuapea = ramp(t, 6, 7.6), up = ramp(t, 0, 0.3) * (1 - ramp(t, 1.2, 2));
+  // Dame: on 1 everyone lets go and the girl on his right turns into his
+  // arms. His right hand goes to her back; her left arm goes straight up and
+  // comes down over his right arm onto his back by 3. On 5 they let go of
+  // each other's backs and his left hand takes her right as she crosses in
+  // front of him; the grip is back in the guapea by 7.
+  const wOld = 1 - ramp(t, 0, 0.35), release = ramp(t, 4.4, 5);
+  const wBack = ramp(t, 0.15, 0.55) * (1 - release), up = ramp(t, 0, 0.3), hold = ramp(t, 1, 2);
+  const wNew = ramp(t, 3.7, 4.1), toGuapea = ramp(t, 5.4, 6.4);
   const old = [], neu = [];
   for (let i = 0; i < n; i++) {
     const L = leads[i].pose, Fo = follows[mod(i + s, n)].pose, Fn = follows[mod(i + s + 1, n)].pose;
@@ -366,13 +370,17 @@ function hands(b) {
     neu[i] = mix(crossGrip(L, Fn, t), guapeaGrip(L, Fn, t), toGuapea);
     const back = Fn.Lw(Fn.nf - 2.4, Fn.ns - Fn.d.sO * 1.5, Fn.pz + 4.5); // her left shoulder blade
     aim(L, mix(mix(rest(L, L.d.sO), old[i], wOld), neu[i], wNew), mix(styled(L, t), back, wBack));
+    if (wBack > 0.5) L.wrap = { I: Fn };
   }
   for (let j = 0; j < n; j++) {
-    const F = follows[j].pose, sO = F.d.sO;
+    const F = follows[j].pose, sO = F.d.sO, L = leads[mod(j - s - 1, n)].pose;
     // Her shoulder lifts with the arm so the hand clears her head.
-    F.shI = add(F.shI, v3(0, 0, 2 * up));
+    F.shI = add(F.shI, v3(0, 0, 2 * up * (1 - hold)));
     const high = F.Lw(F.nf + 0.5, F.ns - sO * (F.d.shW + 3), F.head.z + 9);
-    aim(F, mix(mix(rest(F, sO), old[mod(j - s, n)], wOld), neu[mod(j - s - 1, n)], wNew), mix(styled(F, t), high, up));
+    const back = L.Lw(L.nf - 2.2, L.ns - L.d.sO * (L.d.shW - 1), L.nz - 2); // behind his right shoulder
+    const free = mix(mix(styled(F, t), high, up), back, hold);
+    aim(F, mix(mix(rest(F, sO), old[mod(j - s, n)], wOld), neu[mod(j - s - 1, n)], wNew), mix(free, styled(F, t), release));
+    if (hold * (1 - release) > 0.5) F.wrap = { I: L };
   }
 }
 
@@ -418,13 +426,17 @@ function drawDancer(d, B, A) {
   } });
   for (const n of ['O', 'I']) {
     const a = A[n];
-    items.push({ z: (depth(a.el) + depth(a.hand)) / 2, draw: () => {
-      spr.limb([Pp(a.sh), Pp(a.el), Pp(a.hand)], lead ? [3.2, 2.7] : [2.5, 2.2], lead ? [look.shirt, look.skin] : [look.skin, look.skin]);
-      spr.blob(Pp(a.hand), 1.35, look.skin);
-    } });
+    // An arm around a partner's back is drawn with the partner (render).
+    if (!B.wrap?.[n]) items.push({ z: (depth(a.el) + depth(a.hand)) / 2, draw: () => arm(d, a) });
   }
   items.sort((a, b) => b.z - a.z).forEach((p) => p.draw());
   head(d, B);
+}
+
+function arm(d, a) {
+  const look = d.look;
+  spr.limb([proj(a.sh), proj(a.el), proj(a.hand)], d.lead ? [3.2, 2.7] : [2.5, 2.2], d.lead ? [look.shirt, look.skin] : [look.skin, look.skin]);
+  spr.blob(proj(a.hand), 1.35, look.skin);
 }
 
 function skirt(d, B) {
@@ -554,14 +566,14 @@ function puff(p, n, color = '#d8b088', speed = 14) {
 }
 
 // Things that happen on a count: dust under the feet, and in a move, the
-// whoosh of her turn and the landing on the next 1.
+// whoosh of her turn on 6 and the landing on the next 1.
 function onBeat(k) {
   const c = mod(k, 8), m = Math.floor(k / 8), fig = figureAt(m), me = player();
   for (const d of dancers()) {
     const mine = d === me && state.mode === 'play';
     if (c === 0 || c === 4 || (mine && [1, 2, 5, 6].includes(c))) puff(c === 0 || c === 2 || c === 5 ? d.pose.ankleO : d.pose.ankleI, mine ? 4 : 2);
   }
-  if (fig.shift && c === 6) music.sfx('whoosh');
+  if (fig.shift && c === 5) music.sfx('whoosh');
   if (c === 0 && figureAt(m - 1).shift) {
     music.sfx('perfect');
     shake = 0.6;
@@ -654,7 +666,20 @@ function render(b, dt) {
     }
   }
   spr.clear();
-  dancers().sort((a, c) => depth(c.pose.pelvis) - depth(a.pose.pelvis)).forEach((d) => drawDancer(d, d.pose, d.pose.arms));
+  // A hand on someone's back shows over them when their back is to the
+  // camera, and hides behind them when it isn't.
+  const around = new Map();
+  for (const d of dancers()) for (const [n, Pd] of Object.entries(d.pose.wrap || {})) {
+    const k = Pd.f.x * TO_CAM.x + Pd.f.y * TO_CAM.y < 0 ? 'after' : 'before';
+    if (!around.has(Pd)) around.set(Pd, { before: [], after: [] });
+    around.get(Pd)[k].push(() => arm(d, d.pose.arms[n]));
+  }
+  dancers().sort((a, c) => depth(c.pose.pelvis) - depth(a.pose.pelvis)).forEach((d) => {
+    const w = around.get(d.pose);
+    w?.before.forEach((f) => f());
+    drawDancer(d, d.pose, d.pose.arms);
+    w?.after.forEach((f) => f());
+  });
   spr.commit(out);
   const sh = shake > 0.05 ? Math.round((Math.random() - 0.5) * 2 * shake) : 0;
   shake *= Math.pow(0.001, dt);
