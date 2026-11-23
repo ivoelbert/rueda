@@ -6,11 +6,11 @@ An arcade rueda de casino game.
 
 `guapea/` is an isometric pixel rueda that dances the guapea in unison, tuned for feel rather than accuracy. The root page opens it.
 
-The moves library on the left lists the calls. Pick one and press Space (or tap the game): the whole rueda dances it from the next 1, then goes back to the guapea. A second call can be queued while a move is running. So far there is one move:
+The moves library on the left lists the calls. Pick one and press Space (or tap the game): the whole rueda dances it from the next 1, then goes back to the guapea. A move can prepare on the 8 before its 1, so a call made on that 8 waits for the 1 after. A second call can be queued while a move is running. So far there is one move:
 
-- **Dame**: a dile que no with the girl on your right. On 1 every lead lets go, turns to face the center and steps in, and the girl on his right turns half round to her left into his arms: his right hand on her back, her left arm up and then over onto his back by the 3. On 5 his left hand takes her right and she crosses in front of him, turning on 6 to face him, so everyone is home by 7. The leads keep their places and the girls move on one place, so everyone has a new partner.
+- **Dame**: a dile que no with the girl on your right. On the 8 before it, the leads and the girls on their right start turning toward each other and drift away from their partners, still holding hands. On 1 every lead lets go, turns to face the center and steps in, and the girl on his right turns half round to her left into his arms: his right hand on her back, her left arm up and then over onto his back by the 3. On 5 his left hand takes her right and she crosses in front of him, turning on 6 to face him, so everyone is home by 7. The leads keep their places and the girls move on one place, so everyone has a new partner.
 
-Moves live in `MOVES` in `guapea/main.js`. Each one gives the lead and the follow a root path around the circle (places traveled, distance from the center, turn), pelvis and footstep keys per count, and how many places the girls move on (`shift`). The hands for a move are scripted in `hands()`.
+Moves live in `MOVES` in `guapea/main.js`. Each one gives the lead and the follow a root path around the circle (places traveled, distance from the center, turn; it can start at -1, on the 8 before the move), pelvis and footstep keys per count, and how many places the girls move on (`shift`). The hands for a move are scripted in `hands()`.
 
 - Keys: Space = call the selected move, ▲ ▼ or 1-9 = pick a move, ◄ ► = lead/follow, S = ½× speed, M = mute, T = the tune panel.
 - The tune panel's sliders (tempo, bounce, hips, step size, arm swing, styling, timing, springiness, looseness, couples) are saved in the URL, so a tuned version can be shared as a link.

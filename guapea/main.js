@@ -73,7 +73,8 @@ const FOOT_I_F = FOOT_I.map(([b, f, , lift]) => [b, f, 0, lift]); // she doesn't
 // A figure gives each role its tracks for one 8-count measure:
 //   root    [beat, along, out, turn]: where the body travels. along counts
 //           places around the circle (+ = counterclockwise), out is px away
-//           from the center, turn is degrees (+ = left). Keys run 0 to 8.
+//           from the center, turn is degrees (+ = left). Keys run 0 to 8;
+//           a move can start at -1 to prepare on the 8 before it.
 //   pelvis, angle: as in the guapea.
 //   O, I    footsteps [beat, forward in steps, inward px, lift px], placed
 //           relative to the body where the foot lands.
@@ -92,23 +93,27 @@ const MOVES = {
   dame: {
     id: 'dame', name: 'DAME', say: '¡Dame!', shift: 1,
     blurb: 'Dile que no with the girl on your right. The girls move on one place, so everyone has a new partner.',
-    // On 1 he lets go, turns right to face the center and steps in toward
-    // the girl on his right, taking her into a closed hold. 2-3 he settles
-    // back; on 5-6-7 he turns back to his left while she crosses in front of
-    // him, and he is home by 7.
+    // On the 8 before it he starts turning right toward the girl behind
+    // him and drifts away from his partner, still holding her hand. On 1 he
+    // lets go, turns right to face the center and steps in toward the girl
+    // on his right, taking her into a closed hold. 2-3 he settles back; on
+    // 5-6-7 he turns back to his left while she crosses in front of him, and
+    // he is home by 7.
     lead: {
-      root: [[0, 0, 0, 0], [0.5, 0.06, -1.8, -90], [1, 0.1, -3, -110], [2, 0.09, -2.6, -108], [3, 0.08, -2, -106], [4, 0.07, -1.6, -104], [5, 0.03, -0.6, -50], [6, 0, 0, 0], [8, 0, 0, 0]],
-      pelvis: [[0, 0.7], [1, 0.1], [2, 0], [4, -0.4], [5, -0.1], [6, 0]],
+      root: [[-1, 0, 0, 0], [0, 0.05, -0.3, -25], [0.5, 0.07, -1.8, -90], [1, 0.1, -3, -110], [2, 0.09, -2.6, -108], [3, 0.08, -2, -106], [4, 0.07, -1.6, -104], [5, 0.03, -0.6, -50], [6, 0, 0, 0], [8, 0, 0, 0]],
+      pelvis: [[0, -0.6], [1, 0.3], [2, 0], [4, -0.4], [5, -0.1], [6, 0]],
       angle: [[0, 0]],
       O: [[0, 0.5, 0, 2.8], [2, 0, 0, 2.2], [5, 0, 0, 2], [7, 0, 0, 1.3]],
       I: [[1, 0, 0, 1.6], [3, 0, 0, 1.2], [4, -0.4, 0, 2.4], [6, 0, 0, 2.2]],
     },
-    // On 1 she lets go and turns half round to her left, into his arms, face
-    // to face and a little to his right, her left arm going up and over onto
-    // his back. On 5 she walks across in front of him, on 6 she turns half
-    // round to her left, and on 7 she is home, facing him.
+    // On the 8 she starts turning left toward him and drifts away from her
+    // partner, still holding his hand. On 1 she lets go and turns half round
+    // to her left, into his arms, face to face and a little to his right,
+    // her left arm going up and over onto his back. On 5 she walks across
+    // in front of him, on 6 she turns half round to her left, and on 7 she
+    // is home, facing him.
     follow: {
-      root: [[0, 0, 0, 0], [0.5, -0.13, -3, 150], [1, -0.252, -6.1, 186], [2, -0.266, -6.1, 188], [3, -0.281, -5.8, 190], [4, -0.295, -5.7, 192], [4.5, -0.493, -9.6, 182], [5, -0.731, -5.4, 195], [5.7, -0.98, -0.3, 352], [6, -1, 0, 360], [8, -1, 0, 360]],
+      root: [[-1, 0, 0, 0], [0, -0.05, -0.4, 35], [0.5, -0.13, -3, 150], [1, -0.252, -6.1, 186], [2, -0.266, -6.1, 188], [3, -0.281, -5.8, 190], [4, -0.295, -5.7, 192], [4.5, -0.493, -9.6, 182], [5, -0.731, -5.4, 195], [5.7, -0.98, -0.3, 352], [6, -1, 0, 360], [8, -1, 0, 360]],
       pelvis: [[0, -1], [1, -0.3], [2, 0.2], [4, 0.6], [5, 0.4], [6, 0]],
       angle: [[0, 0]],
       O: [[0, -0.5, 0, 2.6], [2, 0.2, 2.5, 2.6], [5, 0, 0, 2.2], [7, 0, 0, 1.3]],
@@ -249,7 +254,8 @@ function build() {
 // leads keep their places; a follow's home spot moves on one place clockwise
 // per partner change.
 function root(d, b) {
-  const m = Math.floor(b / 8);
+  let m = Math.floor(b / 8);
+  if (b - (m + 1) * 8 >= figureAt(m + 1)[d.role].root[0][0]) m++; // the next move's preparation
   const [along, out, turn] = evalRoot(figureAt(m)[d.role].root, b - m * 8);
   const a = ((d.lead ? 0 : -shiftBefore(m)) + along) * SLOT, c = Math.cos(a), s = Math.sin(a);
   const x = d.home.x * c - d.home.y * s, y = d.home.x * s + d.home.y * c, r = Math.hypot(x, y);
@@ -361,7 +367,7 @@ function hands(b) {
   // each other's backs and his left hand takes her right as she crosses in
   // front of him; the grip is back in the guapea by 7.
   const wOld = 1 - ramp(t, 0, 0.35), release = ramp(t, 4.4, 5);
-  const wBack = ramp(t, 0.15, 0.55) * (1 - release), up = ramp(t, 0, 0.3), hold = ramp(t, 1, 2);
+  const wBack = ramp(t, 0.3, 0.7) * (1 - release), up = ramp(t, 0, 0.3), hold = ramp(t, 1, 2);
   const wNew = ramp(t, 3.7, 4.1), toGuapea = ramp(t, 5.4, 6.4);
   const old = [], neu = [];
   for (let i = 0; i < n; i++) {
@@ -594,7 +600,10 @@ function onBeat(k) {
 // Space: the rueda dances the selected move from the next 1.
 function call() {
   if (state.mode === 'title') return start();
-  const b = music.beat(), m = Math.floor(b / 8) + 1;
+  // A call on the 8 is too late for the move's preparation; it waits for
+  // the 1 after.
+  const mv = MOVES[state.move], early = -Math.min(0, mv.lead.root[0][0], mv.follow.root[0][0]);
+  const b = music.beat(), m = Math.floor((b + early) / 8) + 1;
   if (timeline.has(m)) return music.sfx('nope');
   timeline.set(m, state.move);
   state.calledAt = b;
