@@ -74,7 +74,8 @@ const FOOT_I_F = FOOT_I.map(([b, f, , lift]) => [b, f, 0, lift]); // she doesn't
 //   root    [beat, along, out, turn]: where the body travels. along counts
 //           places around the circle (+ = counterclockwise), out is px away
 //           from the center, turn is degrees (+ = left). Keys run 0 to 8;
-//           a move can start at -1 to prepare on the 8 before it.
+//           a move can start at -2 to prepare on the 7 and 8 before it
+//           (the call comes on 5).
 //   pelvis, angle: as in the guapea.
 //   O, I    footsteps [beat, forward in steps, inward px, lift px], placed
 //           relative to the body where the foot lands.
@@ -93,27 +94,27 @@ const MOVES = {
   dame: {
     id: 'dame', name: 'DAME', say: '¡Dame!', shift: 1,
     blurb: 'Dile que no with the girl on your right. The girls move on one place, so everyone has a new partner.',
-    // On the 8 before it he starts turning right toward the girl behind
-    // him and drifts away from his partner, still holding her hand. On 1 he
+    // On the 7 and 8 before it he starts turning right toward the girl
+    // behind him and drifts away from his partner, still holding her hand. On 1 he
     // lets go, turns right to face the center and steps in toward the girl
     // on his right, taking her into a closed hold. 2-3 he settles back; on
     // 5-6-7 he turns back to his left while she crosses in front of him, and
     // he is home by 7.
     lead: {
-      root: [[-1, 0, 0, 0], [0, 0.05, -0.3, -25], [0.5, 0.07, -1.8, -90], [1, 0.1, -3, -110], [2, 0.09, -2.6, -108], [3, 0.08, -2, -106], [4, 0.07, -1.6, -104], [5, 0.03, -0.6, -50], [6, 0, 0, 0], [8, 0, 0, 0]],
+      root: [[-2, 0, 0, 0], [-1, 0.025, -0.1, -14], [0, 0.05, -0.3, -25], [0.5, 0.07, -1.8, -90], [1, 0.1, -3, -110], [2, 0.09, -2.6, -108], [3, 0.08, -2, -106], [4, 0.07, -1.6, -104], [5, 0.03, -0.6, -50], [6, 0, 0, 0], [8, 0, 0, 0]],
       pelvis: [[0, -0.6], [1, 0.3], [2, 0], [4, -0.4], [5, -0.1], [6, 0]],
       angle: [[0, 0]],
       O: [[0, 0.5, 0, 2.8], [2, 0, 0, 2.2], [5, 0, 0, 2], [7, 0, 0, 1.3]],
       I: [[1, 0, 0, 1.6], [3, 0, 0, 1.2], [4, -0.4, 0, 2.4], [6, 0, 0, 2.2]],
     },
-    // On the 8 she starts turning left toward him and drifts away from her
-    // partner, still holding his hand. On 1 she lets go and turns half round
+    // On the 7 and 8 she starts turning left toward him and drifts away
+    // from her partner, still holding his hand. On 1 she lets go and turns half round
     // to her left, into his arms, face to face and a little to his right,
     // her left arm going up and over onto his back. On 5 she walks across
     // in front of him, on 6 she turns half round to her left, and on 7 she
     // is home, facing him.
     follow: {
-      root: [[-1, 0, 0, 0], [0, -0.05, -0.4, 35], [0.5, -0.13, -3, 150], [1, -0.252, -6.1, 186], [2, -0.266, -6.1, 188], [3, -0.281, -5.8, 190], [4, -0.295, -5.7, 192], [4.5, -0.493, -9.6, 182], [5, -0.731, -5.4, 195], [5.7, -0.98, -0.3, 352], [6, -1, 0, 360], [8, -1, 0, 360]],
+      root: [[-2, 0, 0, 0], [-1, -0.025, -0.15, 18], [0, -0.05, -0.4, 35], [0.5, -0.13, -3, 150], [1, -0.252, -6.1, 186], [2, -0.266, -6.1, 188], [3, -0.281, -5.8, 190], [4, -0.295, -5.7, 192], [4.5, -0.493, -9.6, 182], [5, -0.731, -5.4, 195], [5.7, -0.98, -0.3, 352], [6, -1, 0, 360], [8, -1, 0, 360]],
       pelvis: [[0, -1], [1, -0.3], [2, 0.2], [4, 0.6], [5, 0.4], [6, 0]],
       angle: [[0, 0]],
       O: [[0, -0.5, 0, 2.6], [2, 0.2, 2.5, 2.6], [5, 0, 0, 2.2], [7, 0, 0, 1.3]],
@@ -600,8 +601,8 @@ function onBeat(k) {
 // Space: the rueda dances the selected move from the next 1.
 function call() {
   if (state.mode === 'title') return start();
-  // A call on the 8 is too late for the move's preparation; it waits for
-  // the 1 after.
+  // Moves are called on 5. A call once the move's preparation has started
+  // (on 7 for the dame) is too late; it waits for the 1 after.
   const mv = MOVES[state.move], early = -Math.min(0, mv.lead.root[0][0], mv.follow.root[0][0]);
   const b = music.beat(), m = Math.floor((b + early) / 8) + 1;
   if (timeline.has(m)) return music.sfx('nope');
