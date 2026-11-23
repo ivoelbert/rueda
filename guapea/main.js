@@ -370,23 +370,28 @@ function hands(b) {
     neu[i] = mix(crossGrip(L, Fn, t), guapeaGrip(L, Fn, t), toGuapea);
     const back = Fn.Lw(Fn.nf - 2.4, Fn.ns - Fn.d.sO * 1.5, Fn.pz + 4.5); // her left shoulder blade
     aim(L, mix(mix(rest(L, L.d.sO), old[i], wOld), neu[i], wNew), mix(styled(L, t), back, wBack));
-    if (wBack > 0.5) L.wrap = { I: Fn };
+    L.around = { I: { on: Fn, w: wBack, side: v3(Fn.l.x, Fn.l.y, -0.3) } }; // around her left side
   }
   for (let j = 0; j < n; j++) {
     const F = follows[j].pose, sO = F.d.sO, L = leads[mod(j - s - 1, n)].pose;
     // Her shoulder lifts with the arm so the hand clears her head.
     F.shI = add(F.shI, v3(0, 0, 2 * up * (1 - hold)));
     const high = F.Lw(F.nf + 0.5, F.ns - sO * (F.d.shW + 3), F.head.z + 9);
-    const back = L.Lw(L.nf - 2.2, L.ns - L.d.sO * (L.d.shW - 1), L.nz - 2); // behind his right shoulder
+    const back = L.Lw(L.nf - 2.2, L.ns - L.d.sO * 1.2, L.nz - 1.5); // his upper back, by the spine
     const free = mix(mix(styled(F, t), high, up), back, hold);
     aim(F, mix(mix(rest(F, sO), old[mod(j - s, n)], wOld), neu[mod(j - s - 1, n)], wNew), mix(free, styled(F, t), release));
-    if (hold * (1 - release) > 0.5) F.wrap = { I: L };
+    F.around = { I: { on: L, w: hold * (1 - release), side: v3(-L.l.x, -L.l.y, 0.2) } }; // over his right shoulder
   }
 }
 
+// An arm around a partner (B.around) bends its elbow out past the partner's
+// side, so it reaches round them instead of through them.
 function reach(B) {
-  const sO = B.d.sO, pole = (side) => v3(B.l.x * side * 0.7 - B.f.x * 0.35, B.l.y * side * 0.7 - B.f.y * 0.35, -1);
-  const O = ik(B.shO, B.aim.O, ARM[0], ARM[1], pole(sO)), I = ik(B.shI, B.aim.I, ARM[0], ARM[1], pole(-sO));
+  const sO = B.d.sO, pole = (n, side) => {
+    const p = v3(B.l.x * side * 0.7 - B.f.x * 0.35, B.l.y * side * 0.7 - B.f.y * 0.35, -1), a = B.around?.[n];
+    return a ? mix(p, a.side, a.w) : p;
+  };
+  const O = ik(B.shO, B.aim.O, ARM[0], ARM[1], pole('O', sO)), I = ik(B.shI, B.aim.I, ARM[0], ARM[1], pole('I', -sO));
   B.arms = { O: { sh: B.shO, el: O.mid, hand: O.end }, I: { sh: B.shI, el: I.mid, hand: I.end } };
 }
 
@@ -426,16 +431,21 @@ function drawDancer(d, B, A) {
   } });
   for (const n of ['O', 'I']) {
     const a = A[n];
-    // An arm around a partner's back is drawn with the partner (render).
-    if (!B.wrap?.[n]) items.push({ z: (depth(a.el) + depth(a.hand)) / 2, draw: () => arm(d, a) });
+    // Around a partner, the forearm and hand are drawn with the partner
+    // (render); the upper arm stays with the body.
+    if (B.around?.[n]?.w > 0.5) items.push({ z: (depth(a.sh) + depth(a.el)) / 2, draw: () => arm(d, a, 'upper') });
+    else items.push({ z: (depth(a.el) + depth(a.hand)) / 2, draw: () => arm(d, a) });
   }
   items.sort((a, b) => b.z - a.z).forEach((p) => p.draw());
   head(d, B);
 }
 
-function arm(d, a) {
-  const look = d.look;
-  spr.limb([proj(a.sh), proj(a.el), proj(a.hand)], d.lead ? [3.2, 2.7] : [2.5, 2.2], d.lead ? [look.shirt, look.skin] : [look.skin, look.skin]);
+// part: 'upper' (shoulder to elbow), 'fore' (elbow to hand) or both.
+function arm(d, a, part) {
+  const look = d.look, w = d.lead ? [3.2, 2.7] : [2.5, 2.2], c = d.lead ? [look.shirt, look.skin] : [look.skin, look.skin];
+  if (part === 'upper') return spr.limb([proj(a.sh), proj(a.el)], [w[0]], [c[0]]);
+  if (part === 'fore') spr.limb([proj(a.el), proj(a.hand)], [w[1]], [c[1]]);
+  else spr.limb([proj(a.sh), proj(a.el), proj(a.hand)], w, c);
   spr.blob(proj(a.hand), 1.35, look.skin);
 }
 
@@ -669,10 +679,11 @@ function render(b, dt) {
   // A hand on someone's back shows over them when their back is to the
   // camera, and hides behind them when it isn't.
   const around = new Map();
-  for (const d of dancers()) for (const [n, Pd] of Object.entries(d.pose.wrap || {})) {
-    const k = Pd.f.x * TO_CAM.x + Pd.f.y * TO_CAM.y < 0 ? 'after' : 'before';
-    if (!around.has(Pd)) around.set(Pd, { before: [], after: [] });
-    around.get(Pd)[k].push(() => arm(d, d.pose.arms[n]));
+  for (const d of dancers()) for (const [n, { on, w }] of Object.entries(d.pose.around || {})) {
+    if (w <= 0.5) continue;
+    const k = on.f.x * TO_CAM.x + on.f.y * TO_CAM.y < 0 ? 'after' : 'before';
+    if (!around.has(on)) around.set(on, { before: [], after: [] });
+    around.get(on)[k].push(() => arm(d, d.pose.arms[n], 'fore'));
   }
   dancers().sort((a, c) => depth(c.pose.pelvis) - depth(a.pose.pelvis)).forEach((d) => {
     const w = around.get(d.pose);
