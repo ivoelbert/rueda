@@ -176,13 +176,14 @@ const DOBLE = {
 // top from a beat on. It is called on 5 like the others; on the 7-8 before
 // it he takes both her hands, his right on top.
 //
-// First bar, an exhíbela: on 1-2-3 they open out a little; on 5-6-7 she
-// turns once round to her right under both hands (up: the window the hands
-// are up over her head), which crosses them the other way, his left on top.
+// First bar, an exhíbela: on 1 they open out a little, and on 2-3 they come
+// back in lifting both hands up over her head (up: the window the hands are
+// up), ready for 5-6-7, when she turns once round to her right under them.
+// That crosses them the other way, his left on top.
 const EXHIBELA = {
-  shift: 0, whoosh: [5], cross: true, top: [[0, 'R'], [5, 'L']], up: [4, 4.6, 6, 6.8],
-  lead: { ...ENCHUFLA_STEPS, root: [[-2, 0, 0, 0], [-1, -0.02, 0, 0], [0, -0.02, 0, 0], [1, 0.04, 0, 0], [2, 0.02, 0, 0], [3, -0.02, 0, 0], [4, -0.08, 0, 0], [6.5, -0.08, 0, 0], [8, 0, 0, 0]] },
-  follow: { ...ENCHUFLA_STEPS, root: [[-2, 0, 0, 0], [-1, 0.02, 0, 0], [0, 0.02, 0, 0], [1, -0.04, 0, 0], [2, -0.02, 0, 0], [3, 0.02, 0, 0], [4, 0.07, 0, 0], [5, 0.08, 0, -100], [6, 0.08, 0, -280], [7, 0.05, 0, -360], [8, 0, 0, -360]] },
+  shift: 0, whoosh: [5], cross: true, top: [[0, 'R'], [5, 'L']], up: [1, 2.8, 6, 6.8],
+  lead: { ...ENCHUFLA_STEPS, root: [[-2, 0, 0, 0], [-1, -0.02, 0, 0], [0, -0.02, 0, 0], [1, 0.04, 0, 0], [2, -0.01, 0, 0], [3, -0.07, 0, 0], [4, -0.08, 0, 0], [6.5, -0.08, 0, 0], [8, 0, 0, 0]] },
+  follow: { ...ENCHUFLA_STEPS, root: [[-2, 0, 0, 0], [-1, 0.02, 0, 0], [0, 0.02, 0, 0], [1, -0.04, 0, 0], [2, 0.01, 0, 0], [3, 0.06, 0, 0], [4, 0.07, 0, 0], [5, 0.08, 0, -100], [6, 0.08, 0, -280], [7, 0.05, 0, -360], [8, 0, 0, -360]] },
 };
 // Second bar, an enchufla without letting go: on 1 both hands go up over her
 // head; on 2-3 they pass right shoulder to right shoulder, she on the inside
