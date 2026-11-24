@@ -80,7 +80,8 @@ const FOOT_I_F = FOOT_I.map(([b, f, , lift]) => [b, f, 0, lift]); // she doesn't
 //   O, I    footsteps [beat, forward in steps, inward px, lift px], placed
 //           relative to the body where the foot lands.
 // shift is how many places clockwise the girls move on by the end, so each
-// lead has a new partner (a dame is 1).
+// lead has a new partner (a dame is 1). whoosh is the count (0-7) of the
+// figure's big turn.
 const STILL = [[0, 0, 0, 0], [8, 0, 0, 0]];
 const GUAPEA = {
   name: 'GUAPEA', shift: 0,
@@ -88,49 +89,85 @@ const GUAPEA = {
   follow: { root: STILL, pelvis: PELVIS, angle: [[0, 0]], O: FOOT_O, I: FOOT_I_F },
 };
 
-// The moves library. Each move starts on a 1 from the guapea and ends in the
-// guapea; the hands are scripted in hands().
-const MOVES = {
-  dame: {
-    id: 'dame', name: 'DAME', say: '¡Dame!', shift: 1,
-    blurb: 'Dile que no with the girl on your right. The girls move on one place, so everyone has a new partner.',
-    // On the 7 and 8 before it he turns about a quarter round to his right,
-    // toward the girl on his right, and drifts away from his partner, still
-    // holding her hand. On 1 he lets go, turns right to face the center and
-    // steps in toward the girl on his right, taking her into a closed hold.
-    // 2-3 he settles back; on 5-6-7 he turns back to his left while she
-    // crosses in front of him, and he is home by 7.
-    lead: {
-      root: [[-2, 0, 0, 0], [-1, 0.025, -0.1, -50], [0, 0.05, -0.3, -80], [0.5, 0.07, -1.8, -90], [1, 0.1, -3, -110], [2, 0.09, -2.6, -108], [3, 0.08, -2, -106], [4, 0.07, -1.6, -104], [5, 0.03, -0.6, -50], [6, 0, 0, 0], [8, 0, 0, 0]],
-      pelvis: [[0, -0.6], [1, 0.3], [2, 0], [4, -0.4], [5, -0.1], [6, 0]],
-      angle: [[0, 0]],
-      O: [[0, 0.5, 0, 2.8], [2, 0, 0, 2.2], [5, 0, 0, 2], [7, 0, 0, 1.3]],
-      I: [[1, 0, 0, 1.6], [3, 0, 0, 1.2], [4, -0.4, 0, 2.4], [6, 0, 0, 2.2]],
-    },
-    // On the 7 and 8 she turns about a quarter round to her left, toward
-    // him, and drifts away from her partner, still holding his hand. On 1
-    // she lets go and turns half round to her left, into his arms, face to
-    // face and a little to his right, her left arm going up and over onto
-    // his back. On 5 she walks across in front of him, on 6 she turns half
-    // round to her left, and on 7 she is home, facing him.
-    follow: {
-      root: [[-2, 0, 0, 0], [-1, -0.025, -0.15, 55], [0, -0.05, -0.4, 100], [0.5, -0.13, -3, 150], [1, -0.252, -6.1, 186], [2, -0.266, -6.1, 188], [3, -0.281, -5.8, 190], [4, -0.295, -5.7, 192], [4.5, -0.493, -9.6, 182], [5, -0.731, -5.4, 195], [5.7, -0.98, -0.3, 352], [6, -1, 0, 360], [8, -1, 0, 360]],
-      pelvis: [[0, -1], [1, -0.3], [2, 0.2], [4, 0.6], [5, 0.4], [6, 0]],
-      angle: [[0, 0]],
-      O: [[0, -0.5, 0, 2.6], [2, 0.2, 2.5, 2.6], [5, 0, 0, 2.2], [7, 0, 0, 1.3]],
-      I: [[1, 0, 0, 2.2], [3, 0.15, 0, 1.5], [4, 0.4, 0, 2.6], [6, 0, 0, 2.4]],
-    },
+const DAME = {
+  name: 'DAME', shift: 1, whoosh: 5,
+  // On the 7 and 8 before it he turns about a quarter round to his right,
+  // toward the girl on his right, and drifts away from his partner, still
+  // holding her hand. On 1 he lets go, turns right to face the center and
+  // steps in toward the girl on his right, taking her into a closed hold.
+  // 2-3 he settles back; on 5-6-7 he turns back to his left while she
+  // crosses in front of him, and he is home by 7.
+  lead: {
+    root: [[-2, 0, 0, 0], [-1, 0.025, -0.1, -50], [0, 0.05, -0.3, -80], [0.5, 0.07, -1.8, -90], [1, 0.1, -3, -110], [2, 0.09, -2.6, -108], [3, 0.08, -2, -106], [4, 0.07, -1.6, -104], [5, 0.03, -0.6, -50], [6, 0, 0, 0], [8, 0, 0, 0]],
+    pelvis: [[0, -0.6], [1, 0.3], [2, 0], [4, -0.4], [5, -0.1], [6, 0]],
+    angle: [[0, 0]],
+    O: [[0, 0.5, 0, 2.8], [2, 0, 0, 2.2], [5, 0, 0, 2], [7, 0, 0, 1.3]],
+    I: [[1, 0, 0, 1.6], [3, 0, 0, 1.2], [4, -0.4, 0, 2.4], [6, 0, 0, 2.2]],
+  },
+  // On the 7 and 8 she turns about a quarter round to her left, toward
+  // him, and drifts away from her partner, still holding his hand. On 1
+  // she lets go and turns half round to her left, into his arms, face to
+  // face and a little to his right, her left arm going up and over onto
+  // his back. On 5 she walks across in front of him, on 6 she turns half
+  // round to her left, and on 7 she is home, facing him.
+  follow: {
+    root: [[-2, 0, 0, 0], [-1, -0.025, -0.15, 55], [0, -0.05, -0.4, 100], [0.5, -0.13, -3, 150], [1, -0.252, -6.1, 186], [2, -0.266, -6.1, 188], [3, -0.281, -5.8, 190], [4, -0.295, -5.7, 192], [4.5, -0.493, -9.6, 182], [5, -0.731, -5.4, 195], [5.7, -0.98, -0.3, 352], [6, -1, 0, 360], [8, -1, 0, 360]],
+    pelvis: [[0, -1], [1, -0.3], [2, 0.2], [4, 0.6], [5, 0.4], [6, 0]],
+    angle: [[0, 0]],
+    O: [[0, -0.5, 0, 2.6], [2, 0.2, 2.5, 2.6], [5, 0, 0, 2.2], [7, 0, 0, 1.3]],
+    I: [[1, 0, 0, 2.2], [3, 0.15, 0, 1.5], [4, 0.4, 0, 2.6], [6, 0, 0, 2.4]],
   },
 };
 
-// The calls: measure number -> move id. Calls more than two measures old are
-// folded into baseShift.
+// The enchufla's first bar; the second is a dame. Called on 5 like the dame:
+// on the 7 and 8 the joined hands come up and they open a little away from
+// each other.
+const ENCHUFLA_STEPS = { pelvis: [[0, -0.5], [1, 0.3], [2, 0], [4, 0.3], [6, 0]], angle: [[0, 0]], O: [[0, -0.6, 0, 2.6], [2, 0, 0, 2.6], [5, 0, 0, 2.6], [7, 0, 0, 1.3]], I: [[1, 0, 0, 2.6], [3, 0, 0, 1.2], [4, 0, 0, 2.6], [6, 0, 0, 2.4]] };
+const ENCHUFLA = {
+  name: 'ENCHUFLA', shift: 0, whoosh: 1,
+  // On 1 he breaks back and lifts her right hand over her head. On 2-3 he
+  // passes behind her, turning half round to his right, so by 4 he is in her
+  // place facing her. On 5 he lets go and walks back past in front of her
+  // to the girl on his right, and on 7-8 opens to the center for the dame.
+  lead: { ...ENCHUFLA_STEPS, root: [[-2, 0, 0, 0], [-1, -0.015, 0, 6], [0, 0, 0.5, 15], [1, -0.2, 5.5, -80], [2, -0.43, 1.5, -170], [3, -0.45, 0, -180], [4, -0.43, -1.5, -180], [5, -0.24, -5, -175], [6, -0.03, -4, -140], [7, 0.04, -1.5, -100], [8, 0.05, -0.3, -80]] },
+  // On 1 she breaks back. On 2-3 she walks across in front of him, turning
+  // half round to her left under his arm, so by 4 she is in his place
+  // facing him. On 5 they let go and she walks back past him, stepping out
+  // and turning to the center; by 8 her new partner is on her left.
+  follow: { ...ENCHUFLA_STEPS, root: [[-2, 0, 0, 0], [-1, 0.015, 0, -6], [0, 0, 0.5, -15], [1, 0.22, -5.5, 85], [2, 0.43, -1.5, 172], [3, 0.45, 0, 180], [4, 0.43, 1, 180], [5, 0.24, 5, 150], [6, 0.03, 4, 120], [7, -0.04, 1.5, 104], [8, -0.05, -0.4, 100]] },
+};
+
+// The moves library. Each move starts on a 1 from the guapea, dances its
+// bars (one figure per 8 counts) and ends in the guapea; the hands are
+// scripted in hands().
+const fromOne = (tracks) => ({ ...tracks, root: tracks.root.filter(([b]) => b >= 0) });
+const MOVES = {
+  dame: {
+    id: 'dame', name: 'DAME', say: '¡Dame!', bars: [DAME],
+    blurb: 'Dile que no with the girl on your right. The girls move on one place, so everyone has a new partner.',
+  },
+  enchufla: {
+    id: 'enchufla', name: 'ENCHUFLA', say: '¡Enchufla!',
+    // After the enchufla they are already open to the center with their
+    // hands free, so the dame starts from its 1.
+    bars: [ENCHUFLA, { ...DAME, name: 'ENCHUFLA', free: true, lead: fromOne(DAME.lead), follow: fromOne(DAME.follow) }],
+    blurb: 'She turns under his arm and they swap places, then he walks on to the girl on his right for a dame. Everyone has a new partner.',
+  },
+};
+
+// The calls: measure number -> move id; the move's bars follow from that
+// measure on. Calls well behind us are folded into baseShift.
 const timeline = new Map();
 let baseShift = 0;
-const figureAt = (m) => MOVES[timeline.get(m)] || GUAPEA;
+// The call dancing in measure m, and which of its bars.
+function callAt(m) {
+  for (const [k, id] of timeline) if (m >= k && m < k + MOVES[id].bars.length) return { id, bar: m - k };
+  return null;
+}
+const figureAt = (m) => { const c = callAt(m); return c ? MOVES[c.id].bars[c.bar] : GUAPEA; };
 function shiftBefore(m) {
   let s = baseShift;
-  for (const [k, id] of timeline) if (k < m) s += MOVES[id].shift;
+  for (const [k, id] of timeline) MOVES[id].bars.forEach((f, j) => { if (k + j < m) s += f.shift; });
   return s;
 }
 
@@ -346,15 +383,38 @@ function styled(B, t) {
   return mix(p, B.Lw(B.nf + 0.8, B.ns - sO * 6.2, B.head.z + 2), clamp(track(HER_FLOURISH, t, 0.55, 0.12, inOut) * style * 0.8, 0, 1));
 }
 
+// Before an enchufla the joined hands come up between them on 7-8 instead of
+// swinging down and out for the 1.
+function lifted(j, L, F, u) {
+  if (u <= 0) return j;
+  const m = mix(L.shO, F.shO, 0.5);
+  return reachable(v3(lerp(j.x, m.x, u), lerp(j.y, m.y, u), j.z + 5 * u), L.shO, F.shO);
+}
+
 function hands(b) {
-  const n = P.couples, m = Math.floor(b / 8), t = b - m * 8, s = shiftBefore(m);
+  const n = P.couples, m = Math.floor(b / 8), t = b - m * 8, s = shiftBefore(m), fig = figureAt(m);
   const aim = (B, O, I) => { B.aim = { O, I }; };
+  const prep = figureAt(m + 1) === ENCHUFLA ? ramp(t, 6, 7.5) : 0;
   palms = [];
-  if (!figureAt(m).shift) {
+  if (fig === ENCHUFLA) {
+    // On 1 he lifts her right hand over her head and she turns under it;
+    // it comes down by 4, and they let go on 5.
+    const over = ramp(t, 0, 0.6) * (1 - ramp(t, 2, 3)), letGo = ramp(t, 3.7, 4.2);
+    for (let i = 0; i < n; i++) {
+      const L = leads[i].pose, F = follows[mod(i + s, n)].pose;
+      F.shO = add(F.shO, v3(0, 0, 2 * over)); // her shoulder lifts with the arm
+      const top = mix(L.shO, F.head, 0.55), high = reachable(v3(top.x, top.y, F.head.z + 3), L.shO, F.shO);
+      const j = mix(lifted(guapeaGrip(L, F, t), L, F, 1 - ramp(t, 2, 3)), high, over);
+      aim(L, mix(j, rest(L, L.d.sO), letGo), styled(L, t));
+      aim(F, mix(j, rest(F, F.d.sO), letGo), styled(F, t));
+    }
+    return;
+  }
+  if (!fig.shift) {
     // Guapea: the free palms meet on 5.
     const press = track(PRESS, t, 0.42, 0, inOut);
     for (let i = 0; i < n; i++) {
-      const L = leads[i].pose, F = follows[mod(i + s, n)].pose, j = guapeaGrip(L, F, t);
+      const L = leads[i].pose, F = follows[mod(i + s, n)].pose, j = lifted(guapeaGrip(L, F, t), L, F, prep);
       const pm = mix(L.shI, F.shI, 0.5), palm = v3(pm.x, pm.y, pm.z - 1.5);
       palms.push(palm);
       aim(L, j, mix(styled(L, t), palm, press));
@@ -366,15 +426,16 @@ function hands(b) {
   // arms. His right hand goes to her back; her left arm goes straight up and
   // comes down over his right arm onto his back by 3. On 5 they let go of
   // each other's backs and his left hand takes her right as she crosses in
-  // front of him; the grip is back in the guapea by 7.
-  const wOld = 1 - ramp(t, 0, 0.35), release = ramp(t, 4.4, 5);
+  // front of him; the grip is back in the guapea by 7. After an enchufla
+  // (fig.free) they have already let go of their old partners.
+  const wOld = fig.free ? 0 : 1 - ramp(t, 0, 0.35), release = ramp(t, 4.4, 5);
   const wBack = ramp(t, 0.3, 0.7) * (1 - release), up = ramp(t, 0, 0.3), hold = ramp(t, 1, 2);
   const wNew = ramp(t, 3.7, 4.1), toGuapea = ramp(t, 5.4, 6.4);
   const old = [], neu = [];
   for (let i = 0; i < n; i++) {
     const L = leads[i].pose, Fo = follows[mod(i + s, n)].pose, Fn = follows[mod(i + s + 1, n)].pose;
     old[i] = guapeaGrip(L, Fo, t);
-    neu[i] = mix(crossGrip(L, Fn, t), guapeaGrip(L, Fn, t), toGuapea);
+    neu[i] = lifted(mix(crossGrip(L, Fn, t), guapeaGrip(L, Fn, t), toGuapea), L, Fn, prep);
     const back = Fn.Lw(Fn.nf - 2.4, Fn.ns - Fn.d.sO * 1.5, Fn.pz + 4.5); // her left shoulder blade
     aim(L, mix(mix(rest(L, L.d.sO), old[i], wOld), neu[i], wNew), mix(styled(L, t), back, wBack));
     L.around = { I: { on: Fn, w: wBack, side: v3(Fn.l.x, Fn.l.y, -0.3) } }; // around her left side
@@ -583,15 +644,16 @@ function puff(p, n, color = '#d8b088', speed = 14) {
 }
 
 // Things that happen on a count: dust under the feet, and in a move, the
-// whoosh of her turn on 6 and the landing on the next 1.
+// whoosh of its big turn and the landing on the 1 after it.
 function onBeat(k) {
   const c = mod(k, 8), m = Math.floor(k / 8), fig = figureAt(m), me = player();
   for (const d of dancers()) {
     const mine = d === me && state.mode === 'play';
     if (c === 0 || c === 4 || (mine && [1, 2, 5, 6].includes(c))) puff(c === 0 || c === 2 || c === 5 ? d.pose.ankleO : d.pose.ankleI, mine ? 4 : 2);
   }
-  if (fig.shift && c === 5) music.sfx('whoosh');
-  if (c === 0 && figureAt(m - 1).shift) {
+  if (fig.whoosh === c) music.sfx('whoosh');
+  const done = callAt(m - 1);
+  if (c === 0 && done && done.bar === MOVES[done.id].bars.length - 1) {
     music.sfx('perfect');
     shake = 0.6;
     for (const d of [me, me.lead ? follows[mod(shiftBefore(m), leads.length)] : leads[mod(-shiftBefore(m), leads.length)]]) puff(d.pose.ankleO, 10, '#f0d0a0', 30);
@@ -602,10 +664,14 @@ function onBeat(k) {
 function call() {
   if (state.mode === 'title') return start();
   // Moves are called on 5. A call once the move's preparation has started
-  // (on 7 for the dame) is too late; it waits for the 1 after.
-  const mv = MOVES[state.move], early = -Math.min(0, mv.lead.root[0][0], mv.follow.root[0][0]);
-  const b = music.beat(), m = Math.floor((b + early) / 8) + 1;
-  if (timeline.has(m)) return music.sfx('nope');
+  // (on 7) is too late; it waits for the 1 after. A call during a longer
+  // move waits for it to end.
+  const mv = MOVES[state.move], first = mv.bars[0], early = -Math.min(0, first.lead.root[0][0], first.follow.root[0][0]);
+  const b = music.beat();
+  let m = Math.floor((b + early) / 8) + 1;
+  const running = callAt(m);
+  if (running?.bar > 0) m += MOVES[running.id].bars.length - running.bar;
+  if (mv.bars.some((_, j) => callAt(m + j))) return music.sfx('nope');
   timeline.set(m, state.move);
   state.calledAt = b;
   music.sfx('select');
@@ -646,7 +712,10 @@ function poseAll(b, dt) {
 // Calls well behind us only matter for who dances with whom.
 function fold(b) {
   const m = Math.floor(b / 8);
-  for (const [k, id] of timeline) if (k < m - 3) { baseShift += MOVES[id].shift; timeline.delete(k); }
+  for (const [k, id] of timeline) if (k + MOVES[id].bars.length <= m - 3) {
+    for (const f of MOVES[id].bars) baseShift += f.shift;
+    timeline.delete(k);
+  }
 }
 
 function frame(now) {
@@ -739,7 +808,7 @@ function ellipse(out, cx, cy, rx, ry, color) {
 
 // ------------------------------------------------------------ HUD
 function hud(b, t, cnt) {
-  const me = player(), B = me.pose, m = Math.floor(b / 8), fig = figureAt(m), next = timeline.get(m + 1);
+  const me = player(), B = me.pose, m = Math.floor(b / 8), fig = figureAt(m), now = callAt(m), next = timeline.get(m + 1);
   drawText(ctx, 'RUEDA', 8, 6, GOLD, 2, OUTLINE, { shadow: OUTLINE });
   drawText(ctx, fig.name, 9, 24, fig === GUAPEA ? CREAM : GOLD[2], 1, OUTLINE);
 
@@ -761,9 +830,9 @@ function hud(b, t, cnt) {
 
   // The move's name over the circle on its 1; otherwise a big 1 and 5 in
   // the middle of the circle.
-  if (fig.shift && t < 1.2) {
+  if (now?.bar === 0 && t < 1.2) {
     const s = t < 0.08 ? 5 : 4;
-    if (t < 0.6 || Math.floor(b * 6) % 2 === 0) centerText(ctx, `¡${fig.name}!`, 12 - (s - 4) * 2, GOLD, s, OUTLINE, { shadow: OUTLINE });
+    if (t < 0.6 || Math.floor(b * 6) % 2 === 0) centerText(ctx, `¡${MOVES[now.id].name}!`, 12 - (s - 4) * 2, GOLD, s, OUTLINE, { shadow: OUTLINE });
   } else if ((cnt === 0 || cnt === 4) && t % 4 < 0.45) {
     const s = t % 4 < 0.08 ? 5 : 4;
     centerText(ctx, String(cnt + 1), OY - 28 - (s - 4) * 3, cnt === 0 ? GOLD : CREAM, s, OUTLINE, { shadow: OUTLINE });
@@ -781,7 +850,7 @@ function hud(b, t, cnt) {
   }
   drawText(ctx, `1P ${state.role === 'lead' ? 'LEAD' : 'FOLLOW'}`, 8, H - 20, GOLD[2], 1, OUTLINE);
   drawText(ctx, state.half ? '½× PRÁCTICA' : '', 8, H - 10, '#a8e878', 1, OUTLINE);
-  const idle = !next && !fig.shift && b - Math.max(state.calledAt, state.startedAt) > 12;
+  const idle = !next && !now && b - Math.max(state.calledAt, state.startedAt) > 12;
   if (idle && Math.floor(b * 2) % 2 === 0) centerText(ctx, `SPACE: CALL ¡${MOVES[state.move].name}!`, H - 33, CREAM, 1, OUTLINE);
   if (b - state.startedAt < 4 && b - state.startedAt >= 0) centerText(ctx, '¡A BAILAR!', 12, GOLD, 4, OUTLINE, { shadow: OUTLINE });
 }
@@ -819,7 +888,7 @@ function select(id) {
 }
 // Marks the selected move, and the one dancing now or next.
 function syncLibrary(b) {
-  const m = Math.floor(b / 8), now = timeline.get(m), next = timeline.get(m + 1), key = `${state.move}|${now}|${next}`;
+  const m = Math.floor(b / 8), now = callAt(m)?.id, next = timeline.get(m + 1), key = `${state.move}|${now}|${next}`;
   if (key === libKey) return;
   libKey = key;
   for (const btn of lib.querySelectorAll('button[data-move]')) {
