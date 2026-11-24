@@ -139,14 +139,14 @@ const ENCHUFLA = {
   // On 1 he breaks back and lifts her right hand over her head. On 2-3 he
   // passes behind her, turning half round to his right, so by 4 he is in her
   // place facing her, already starting back. On 5 he lets go and walks back
-  // past in front of her to the girl on his right, and on 7-8 opens to the
-  // center for the dame.
-  lead: { ...ENCHUFLA_STEPS, O: ENCHUFLA_O, root: [[-2, 0, 0, 0], [-1, -0.015, 0, 6], [0, 0, 0.5, 15], [1, -0.2, 5.5, -80], [2, -0.42, 2, -165], [3, -0.45, -0.8, -185], [4, -0.32, -4, -182], [5, -0.15, -5, -168], [6, -0.02, -3.8, -140], [7, 0.04, -1.5, -100], [8, 0.05, -0.3, -80]] },
+  // past in front of her to the girl on his right, facing her as she comes
+  // to him, and on 8 starts turning into the dame.
+  lead: { ...ENCHUFLA_STEPS, O: ENCHUFLA_O, root: [[-2, 0, 0, 0], [-1, -0.015, 0, 6], [0, 0, 0.5, 15], [1, -0.2, 5.5, -80], [2, -0.42, 2, -165], [3, -0.45, -0.8, -185], [4, -0.32, -4, -182], [5, -0.15, -5, -168], [6, -0.02, -3.8, -168], [7, 0.04, -1.5, -166], [8, 0.05, -0.3, -153]] },
   // On 1 she breaks back. On 2-3 she walks across in front of him, turning
   // half round to her left under his arm, so by 4 she is in his place
-  // facing him. On 5 they let go and she walks back past him, stepping out
-  // and turning to the center; by 8 her new partner is on her left.
-  follow: { ...ENCHUFLA_STEPS, O: ENCHUFLA_O, root: [[-2, 0, 0, 0], [-1, 0.015, 0, -6], [0, 0, 0.5, -15], [1, 0.22, -5.5, 85], [2, 0.43, -1.5, 170], [3, 0.46, 0.8, 186], [4, 0.33, 3.8, 178], [5, 0.15, 5, 152], [6, 0.02, 3.8, 122], [7, -0.04, 1.5, 104], [8, -0.05, -0.4, 100]] },
+  // facing him. On 5 they let go and she walks back past him and on to her
+  // new partner, the lead on her left, facing him as she comes.
+  follow: { ...ENCHUFLA_STEPS, O: ENCHUFLA_O, root: [[-2, 0, 0, 0], [-1, 0.015, 0, -6], [0, 0, 0.5, -15], [1, 0.22, -5.5, 85], [2, 0.43, -1.5, 170], [3, 0.46, 0.8, 186], [4, 0.33, 3.8, 178], [5, 0.15, 5, 152], [6, 0.03, 3.6, 141], [7, -0.035, 1.7, 146], [8, -0.09, -0.7, 154]] },
 };
 
 // The enchufla doble's first bar; then comes a whole enchufla. It starts
@@ -175,9 +175,15 @@ const DOBLE = {
 // bars (one figure per 8 counts) and ends in the guapea; the hands are
 // scripted in hands().
 const fromOne = (tracks) => ({ ...tracks, root: tracks.root.filter(([b]) => b >= 0) });
-// After an enchufla they are already open to the center with their hands
-// free, so its dame starts from its 1.
-const DAME_AFTER_ENCHUFLA = { ...DAME, free: true, lead: fromOne(DAME.lead), follow: fromOne(DAME.follow) };
+// After an enchufla they are already facing each other with their hands
+// free, so its dame starts from its 1, from where the enchufla left them on
+// 8. flow: they walk straight on into it, without coming to rest on the bar
+// line, and keep turning toward each other into the hold.
+const DAME_AFTER_ENCHUFLA = {
+  ...DAME, free: true, flow: true,
+  lead: { ...DAME.lead, root: [[0, 0.05, -0.3, -153], [0.5, 0.07, -1.8, -134], ...DAME.lead.root.filter(([b]) => b >= 1)] },
+  follow: { ...DAME.follow, root: [[0, -0.09, -0.7, 154], [0.5, -0.16, -3.2, 171], ...DAME.follow.root.filter(([b]) => b >= 1)] },
+};
 // After the doble's first bar they walk straight into the enchufla's 1,
 // still wound a little past facing each other from being sent back.
 const wound = (tracks, turn) => ({ ...tracks, root: [[0, 0, 0.5, turn], ...fromOne(tracks).root.slice(1)] });
@@ -330,13 +336,24 @@ function build() {
   }
 }
 
+// Measure m's root keys. Across the bar line into a figure that flows on
+// from the one before, each side also takes the other's keys, so the curve
+// carries on through it instead of coming to rest on the 8.
+function rootKeys(d, m) {
+  const fig = figureAt(m), prev = figureAt(m - 1), next = figureAt(m + 1);
+  // Another figure's keys on this measure's beats; a follow's along restarts
+  // from her new home after a partner change.
+  const moved = (f, dt, da) => f[d.role].root.map(([t, along, ...rest]) => [t + dt, along + (d.lead ? 0 : da), ...rest]);
+  return [...(fig.flow ? moved(prev, -8, prev.shift).slice(0, -1) : []), ...fig[d.role].root, ...(next.flow ? moved(next, 8, -fig.shift).slice(1) : [])];
+}
+
 // Where a dancer's body is at beat b: a spot on the floor and a heading. The
 // leads keep their places; a follow's home spot moves on one place clockwise
 // per partner change.
 function root(d, b) {
   let m = Math.floor(b / 8);
   if (b - (m + 1) * 8 >= figureAt(m + 1)[d.role].root[0][0]) m++; // the next move's preparation
-  const [along, out, turn] = evalRoot(figureAt(m)[d.role].root, b - m * 8);
+  const [along, out, turn] = evalRoot(rootKeys(d, m), b - m * 8);
   const a = ((d.lead ? 0 : -shiftBefore(m)) + along) * SLOT, c = Math.cos(a), s = Math.sin(a);
   const x = d.home.x * c - d.home.y * s, y = d.home.x * s + d.home.y * c, r = Math.hypot(x, y);
   const h = d.h0 + a + turn * DEG;
