@@ -47,7 +47,16 @@ export class Music {
     comp.ratio.value = 4;
     this.out = this.ctx.createGain();
     this.out.gain.value = 0.8;
-    this.out.connect(comp).connect(this.ctx.destination);
+    // A limiter last, so a loud effect on top of the band (the claps, which
+    // skip the compressor) can't clip. At 0 dB it adds no makeup gain, so
+    // the band alone comes out exactly as before.
+    this.master = this.ctx.createDynamicsCompressor();
+    this.master.threshold.value = 0;
+    this.master.knee.value = 0;
+    this.master.ratio.value = 20;
+    this.master.attack.value = 0.002;
+    this.master.release.value = 0.12;
+    this.out.connect(comp).connect(this.master).connect(this.ctx.destination);
     this.noise = this.ctx.createBuffer(1, this.ctx.sampleRate, this.ctx.sampleRate);
     const d = this.noise.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;

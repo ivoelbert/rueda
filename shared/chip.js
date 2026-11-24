@@ -109,14 +109,14 @@ export class ChipMusic extends Music {
     return mod;
   }
 
-  noiseHit(t, buf, dur, vol, rate = 1, filter = null) {
+  noiseHit(t, buf, dur, vol, rate = 1, filter = null, dest = this.out) {
     const s = this.ctx.createBufferSource();
     s.buffer = buf;
     s.playbackRate.value = rate;
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(vol, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    g.connect(this.out);
+    g.connect(dest);
     if (filter) {
       const f = this.ctx.createBiquadFilter();
       f.type = filter[0]; f.frequency.value = filter[1]; f.Q.value = filter[2] || 1;
@@ -217,10 +217,16 @@ export class ChipMusic extends Music {
       case 'ready': arp([72, 79, 84, 79, 84, 88], 0.11, 0.1, 0.13); break;
       case 'gameover': arp([79, 76, 72, 67, 64, 60], 0.16, 0.15, 0.13); break;
       case 'clap': {
-        // A hand clap: three quick bursts of noise and a short tail.
-        const buf = this.flavor === 'nes' ? this.noiseLong : this.noise;
-        for (const dt of [0, 0.011, 0.022]) this.noiseHit(t + dt, buf, 0.012, 0.16, 1, ['bandpass', 1300, 1.2]);
-        this.noiseHit(t + 0.03, buf, 0.13, 0.14, 1, ['bandpass', 1100, 1]);
+        // The whole rueda clapping: a few hands a few ms apart, each three
+        // quick bursts of noise and a short ring. It skips the band's
+        // compressor, which would squash it back to the band's level, and
+        // goes straight to the limiter; muted, it stays quiet.
+        if (!this.out.gain.value) break;
+        const buf = this.flavor === 'nes' ? this.noiseLong : this.noise, dest = this.master ?? this.out;
+        for (const [dt, f] of [[0, 1200], [0.004, 1700], [0.009, 950], [0.013, 2300]]) {
+          for (const b of [0, 0.008, 0.016]) this.noiseHit(t + dt + b, buf, 0.011, 1.6, 1, ['bandpass', f, 0.6], dest);
+          this.noiseHit(t + dt + 0.02, buf, 0.16, 1.1, 1, ['bandpass', f * 0.9, 0.6], dest);
+        }
         break;
       }
       case 'whoosh':
