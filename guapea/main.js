@@ -351,7 +351,7 @@ const MOVES = {
     blurb: 'An enchufla with three claps, on 7, 8 and the dame\'s 1, then the rest of the dame. Everyone has a new partner.',
   },
   festival: {
-    id: 'festival', name: 'FESTIVAL DE PELOTAS', say: '¡Festival de pelotas!', bars: [PELOTA_1, DAME_AFTER_ENCHUFLA, PELOTA_2, DAME_AFTER_ENCHUFLA, PELOTA_2, DAME_CLAP],
+    id: 'festival', name: 'FESTIVAL PELOTA', say: '¡Festival pelota!', bars: [PELOTA_1, DAME_AFTER_ENCHUFLA, PELOTA_2, DAME_AFTER_ENCHUFLA, PELOTA_2, DAME_CLAP],
     blurb: 'Pelota uno, dos and tres back to back: one clap, then two, then three, with a new partner each time.',
   },
 };
@@ -860,8 +860,9 @@ function clapHands(b) {
     j++;
   }
   if (ready <= 0) return;
-  // Shut over the 0.3 beats before a clap, open over the 0.3 after it.
-  const shut = Math.max(...at.map((c) => (b <= c ? ramp(b, c - 0.32, c) : 1 - ramp(b, c + 0.04, c + 0.35))));
+  // The hands speed up into each other over the 0.3 beats before a clap, so
+  // they meet right on the count, and spring apart straight after it.
+  const shut = Math.max(...at.map((c) => (b <= c ? clamp((b - c + 0.3) / 0.3, 0, 1) ** 3 : (1 - clamp((b - c) / 0.3, 0, 1)) ** 2)));
   const age = Math.min(...at.map((c) => (b >= c ? b - c : Infinity)));
   for (const d of dancers()) {
     const B = d.pose, sO = d.sO, gap = 0.6 + 4 * (1 - shut);
@@ -1076,7 +1077,6 @@ function onBeat(k) {
     if (c === 0 || c === 4 || (mine && [1, 2, 5, 6].includes(c))) puff(c === 0 || c === 2 || c === 5 ? d.pose.ankleO : d.pose.ankleI, mine ? 4 : 2);
   }
   if (fig.whoosh?.includes(c)) music.sfx('whoosh');
-  if (fig.claps?.includes(c)) music.sfx('clap');
   const done = callAt(m - 1);
   if (c === 0 && done && done.bar === MOVES[done.id].bars.length - 1) {
     music.sfx('perfect');
@@ -1145,6 +1145,20 @@ function fold(b) {
   }
 }
 
+// The clap sounds are scheduled ahead, like the band's notes, so they are
+// heard right on the count: once the listener hears a beat it is too late to
+// start a sound for it.
+let clapsUpTo = -Infinity;
+function scheduleClaps(b) {
+  const m = Math.floor(b / 8);
+  for (let mm = m; mm <= m + 1; mm++) for (const c of figureAt(mm).claps ?? []) {
+    const k = mm * 8 + c, at = music.timeOf(k);
+    if (k <= clapsUpTo || at > music.ctx.currentTime + 0.15) continue;
+    clapsUpTo = k;
+    if (at > music.ctx.currentTime - 0.03) music.sfx('clap', at);
+  }
+}
+
 function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(0.05, (now - last) / 1000);
@@ -1158,6 +1172,7 @@ function frame(now) {
   }
   poseAll(b, frozen !== null ? 0 : dt);
   if (frozen === null && lastB !== null && b - lastB < 4) for (let k = Math.floor(lastB) + 1; k <= Math.floor(b); k++) onBeat(k);
+  if (frozen === null && music.ctx) scheduleClaps(b);
   lastB = b;
   render(b, dt);
   syncLibrary(b);

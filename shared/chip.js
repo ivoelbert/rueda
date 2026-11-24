@@ -197,9 +197,10 @@ export class ChipMusic extends Music {
   }
 
   // ------------------------------------------------------------ effects
-  sfx(kind) {
+  // at: when to play it, in audio time (default: right away).
+  sfx(kind, at) {
     if (!this.ctx) return;
-    const t = this.ctx.currentTime + 0.01;
+    const t = Math.max(this.ctx.currentTime, at ?? this.ctx.currentTime + 0.01);
     const arp = (notes, step, len, vol = 0.14) => notes.forEach((m, i) => this.lead(t + i * step, m, len, vol));
     switch (kind) {
       case 'coin': arp([83, 88], 0.07, 0.09); break;
