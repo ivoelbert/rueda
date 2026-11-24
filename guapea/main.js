@@ -213,6 +213,54 @@ const DILE_QUE_NO = {
   follow: { ...DAME.follow, pelvis: [[0, 0.4], [1, 0.1], [2, 0.2], [4, 0.6], [5, 0.4], [6, 0]], sway: [[0, -1], [0.7, 1]], root: [[0, 0.38, -3, 136], [1, 0.41, -5.5, 186], [2, 0.395, -5.6, 188], [3, 0.39, -6, 190], [4, 0.375, -7.2, 192], [4.5, 0.24, -10, 182], [5, 0.1, -6.5, 195], [5.7, 0.01, -0.5, 352], [6, 0, 0, 360], [8, 0, 0, 360]] },
 };
 
+// The setenta's first three bars hold both hands straight (straight: his left
+// holds her right and his right her left); on the 7-8 before it he takes her
+// left hand too. From the second bar on it is three swaps of places in a
+// row, one per half bar, so the couple goes round each other like gears.
+//
+// First bar, an exhíbela that locks her arm: on 1-2-3 his left hand takes her
+// right up over her head (high) while his right keeps hers low at the waist
+// (low), and on 5-6-7 she turns once round to her right under the high hands.
+// The low hands go round her by her left side as she turns (lock), so her left
+// arm ends wrapped behind her back, his right hand holding it there round her
+// right side. They finish close, face to face, home.
+const SETENTA_LOCK = {
+  shift: 0, whoosh: [5], straight: true, high: [1, 2.8, 6, 6.8], low: [0.3, 2.5], lock: [4.3, 6.9],
+  lead: { ...ENCHUFLA_STEPS, root: [[-2, 0, 0, 0], [-1, -0.02, 0, 0], [0, -0.02, 0, 0], [1, 0.04, 0, 0], [2, -0.01, 0, 0], [3, -0.06, 0, 0], [4, -0.08, 0, 0], [5, -0.11, 0.8, 0], [6, -0.135, 2, 0], [8, -0.14, 2.5, 0]] },
+  follow: { ...ENCHUFLA_STEPS, root: [[-2, 0, 0, 0], [-1, 0.02, 0, 0], [0, 0.02, 0, 0], [1, -0.04, 0, 0], [2, 0.01, 0, 0], [3, 0.06, 0, 0], [4, 0.07, 0, 0], [5, 0.11, -0.3, -100], [6, 0.135, -0.8, -280], [7, 0.14, -1, -360], [8, 0.14, -1, -360]] },
+};
+// Second bar, an enchufla without letting go: on 1-2-3 they ease a little
+// apart, and on 5-6-7 his left hand takes her right over her head and they
+// swap places, she on the inside turning half round to her left, he on the
+// outside turning half round to his right. Her turn unwinds her arm (unlock),
+// so by 8 both hands are in front again, and they go straight on into the
+// next swap.
+const SETENTA_ENCHUFLA = {
+  shift: 0, whoosh: [5], straight: true, high: [3.4, 4.2, 6.4, 7.2], unlock: [4.2, 6.4],
+  lead: { ...ENCHUFLA_STEPS, O: ENCHUFLA_O, root: [[0, -0.14, 2.5, 0], [1, -0.13, 2.6, 4], [2, -0.125, 2.6, 8], [3, -0.12, 2.6, 10], [4, -0.12, 3, -5], [5, -0.24, 5.5, -85], [6, -0.36, 2.5, -160], [7, -0.4, -1, -182], [8, -0.36, -3.8, -170]] },
+  follow: { ...ENCHUFLA_STEPS, O: ENCHUFLA_O, root: [[0, 0.14, -1, -360], [1, 0.13, -1.1, -364], [2, 0.125, -1.1, -368], [3, 0.12, -1.2, -370], [4, 0.12, -2, -352], [5, 0.25, -5.5, -275], [6, 0.37, -2, -192], [7, 0.4, 1, -176], [8, 0.36, 3.8, -190]] },
+};
+// Third bar, the other two swaps. On 1-2-3 it is his enchufla: he lets go
+// with his left (offO), takes her left hand up over his own head with his
+// right (mine) and turns half round to his left under it on the inside,
+// while she walks round him on the outside; on 4 his left takes her right
+// again. On 5-6-7 she does the last enchufla: he lets go with his right
+// (offI), takes her right over her head with his left and she turns half
+// round to her left under it, so they finish swapped, still holding that
+// hand, and walk straight on into the dile que no.
+const SETENTA_TURNS = {
+  shift: 0, whoosh: [1, 5], straight: true, flow: true, high: [3.8, 4.5, 6.4, 7.2], mine: [0.1, 0.7, 2.4, 3.2], offO: [0, 0.5, 2.8, 3.6], offI: [3.8, 4.3],
+  lead: { ...ENCHUFLA_STEPS, O: ENCHUFLA_O, root: [[0, -0.36, -3.8, -170], [1, -0.2, -5.5, -95], [2, -0.04, -2, -15], [3, -0.03, 0.6, 6], [4, -0.06, 1.8, -5], [5, -0.22, 5.5, -85], [6, -0.36, 2.5, -160], [7, -0.4, -1, -180], [8, -0.4, -1.6, -165]] },
+  follow: { ...ENCHUFLA_STEPS, O: ENCHUFLA_O, root: [[0, 0.36, 3.8, -190], [1, 0.2, 5.5, -265], [2, 0.04, 2, -345], [3, 0.03, -0.6, -366], [4, 0.07, -1.8, -352], [5, 0.25, -5.5, -275], [6, 0.37, -2, -192], [7, 0.42, 1, -178], [8, 0.44, -1.8, -180]] },
+};
+// Fourth bar, the dile que no from there: his left hand keeps hers (held) as
+// she comes in on his right, her free arm going straight onto his shoulder.
+const SETENTA_DILE = {
+  ...DILE_QUE_NO, free: false, fromHats: false, held: true, flow: true,
+  lead: { ...DILE_QUE_NO.lead, root: [[0, -0.4, -1.6, -165], [1, -0.32, -2.4, -125], ...DILE_QUE_NO.lead.root.filter(([b]) => b >= 2)] },
+  follow: { ...DILE_QUE_NO.follow, sway: [[0, 1]], root: [[0, 0.44, -1.8, -180], ...DILE_QUE_NO.follow.root.filter(([b]) => b >= 1).map(([b, a, o, r]) => [b, a, o, r - 360])] },
+};
+
 // The moves library. Each move starts on a 1 from the guapea, dances its
 // bars (one figure per 8 counts) and ends in the guapea; the hands are
 // scripted in hands().
@@ -246,6 +294,10 @@ const MOVES = {
   sombrero: {
     id: 'sombrero', name: 'SOMBRERO', say: '¡Sombrero!', bars: [EXHIBELA, SOMBRERO, DILE_QUE_NO, DAME],
     blurb: 'Both hands crossed: an exhíbela, then an enchufla without letting go, and on 7 the coronación, each wearing the other\'s arm as a hat. A dile que no hands her on, then a dame. Everyone has a new partner.',
+  },
+  setenta: {
+    id: 'setenta', name: 'SETENTA', say: '¡Setenta!', bars: [SETENTA_LOCK, SETENTA_ENCHUFLA, SETENTA_TURNS, SETENTA_DILE, DAME],
+    blurb: 'Both hands: an exhíbela that wraps her left arm behind her back, an enchufla without letting go that unwinds it, then his enchufla and hers, round like gears. A dile que no hands her on, then a dame. Everyone has a new partner.',
   },
 };
 
@@ -512,6 +564,21 @@ function crossed(L, F, top, up = 0, apart = 0, on = 0) {
   const grip = (W, dz) => mix(mix(mix(v3(c.x, c.y, c.z - 6 + dz), v3(h.x, h.y, h.z + dz), up), v3(W.head.x, W.head.y, W.head.z + 5), apart), hatOn(W), on);
   return { LL: reachable(grip(L, top === 'L' ? 0.8 : -0.8), L.shO, F.shI), RR: reachable(grip(F, top === 'R' ? 0.8 : -0.8), L.shI, F.shO) };
 }
+// Both hands held straight (the setenta): his left in her right (O) and his
+// right in her left (I), in front between them.
+function straight(L, F) {
+  const at = (a, c) => { const m = mix(a, c, 0.5); return reachable(v3(m.x, m.y, 13 - (L.dp + F.dp) / 2), a, c); };
+  return { O: at(L.shO, F.shO), I: at(L.shI, F.shI) };
+}
+// The setenta's lock: her left hand's way round her at the waist, from in
+// front of her on her left (u = 0), by her left side, to behind her back
+// (u = 1). Points are [forward, to her left, up from the pelvis].
+const LOCK_FROM = [6, 4.2, 0.5], LOCK_TO = [-1.6, 0, 3.5];
+function lockPath(F, u) {
+  const [f0, s0, z0] = LOCK_FROM, [f1, s1, z1] = LOCK_TO;
+  const a0 = Math.atan2(s0, f0), a1 = Math.atan2(s1, f1), r = lerp(Math.hypot(f0, s0), Math.hypot(f1, s1), u), a = lerp(a0, a1, u);
+  return F.Lw(F.pf + r * Math.cos(a), F.ps + r * Math.sin(a), F.pz + lerp(z0, z1, u));
+}
 // Each takes the crossed grips, and the top pair's forearms are drawn over
 // both of them (render).
 // w blends from their aims so far; top is false once nothing is on top.
@@ -553,6 +620,35 @@ function hands(b) {
         F.around = { I: { on: L, w: on, side: mix(behind(L), v3(-L.l.x, -L.l.y, 0.2), drop) } };
         L.pole = { O: { w: on * (1 - drop), side: bent(L) } };
         F.pole = { O: { w: on * (1 - drop), side: bent(F) } };
+      }
+    }
+    return;
+  }
+  if (fig.straight) {
+    // The setenta's two hands. His left takes her right over her head
+    // (high) for her turns, and his right takes her left over his own head
+    // (mine) for his. Her left hand goes round her and behind her back as
+    // she turns in the first bar (lock), with his right arm round her right
+    // side holding it, and comes back round in front as she turns back in
+    // the second (unlock). In the third he lets go with his left for his
+    // turn (offO) and with his right for hers (offI).
+    const high = win(fig.high), mine = win(fig.mine), offO = win(fig.offO), offI = fig.offI ? ramp(t, ...fig.offI) : 0;
+    const u = fig.lock ? 1 - (1 - ramp(t, ...fig.lock)) ** 2 : fig.unlock ? 1 - ramp(t, ...fig.unlock) : 0;
+    const locked = smooth(clamp((u - 0.3) / 0.45, 0, 1));
+    for (let i = 0; i < n; i++) {
+      const L = leads[i].pose, F = follows[mod(i + s, n)].pose;
+      F.shO = add(F.shO, v3(0, 0, 2 * high)); // her shoulders lift with the arms
+      F.shI = add(F.shI, v3(0, 0, 2 * mine));
+      const g = straight(L, F), over = (a, W, z) => { const p = mix(a, W.head, 0.55); return v3(p.x, p.y, z); };
+      const O = mix(g.O, reachable(over(L.shO, F, F.head.z + 3), L.shO, F.shO), high);
+      let I = mix(g.I, reachable(over(F.shI, L, L.head.z + 6), L.shI, F.shI), mine);
+      if (fig.lock) I = reachable(mix(mix(I, v3(I.x, I.y, I.z - 1.5), ramp(t, ...fig.low)), lockPath(F, u), ramp(t, 3.4, 4.4)), L.shI, F.shI);
+      if (fig.unlock) I = reachable(mix(lockPath(F, u), I, ramp(t, 5.8, 6.8)), L.shI, F.shI);
+      aim(L, mix(O, rest(L, L.d.sO), offO), mix(I, styled(L, t), offI));
+      aim(F, mix(O, rest(F, F.d.sO), offO), mix(I, styled(F, t), offI));
+      if (locked > 0) {
+        L.around = { I: { on: F, w: locked, side: v3(-F.l.x, -F.l.y, -0.3) } }; // round her right side
+        F.pole = { I: { w: locked, side: v3(F.l.x * 0.6 - F.f.x, F.l.y * 0.6 - F.f.y, -0.3) } }; // her elbow out back
       }
     }
     return;
@@ -600,18 +696,20 @@ function hands(b) {
   // front of him; the grip is back in the guapea by 7. After an enchufla
   // (fig.free) they have already let go of their old partners. In the
   // sombrero's dile que no (fig.dile) it is his own partner, and they are
-  // already in the hold from the coronación (fig.fromHats), so her arm
-  // doesn't go up.
-  const hats = !!fig.fromHats, nn = fig.dile ? 0 : 1;
-  const wOld = fig.free ? 0 : 1 - ramp(t, 0, 0.35), release = ramp(t, 4.4, 5);
-  const wBack = (hats ? 1 : ramp(t, 0.3, 0.7)) * (1 - release), up = hats ? 0 : ramp(t, 0, 0.3), hold = hats ? 1 : ramp(t, 1, 2);
-  const wNew = ramp(t, 3.7, 4.1), toGuapea = ramp(t, 5.4, 6.4);
+  // already in the hold from the coronación (fig.fromHats). With his own
+  // partner her arm doesn't go up and the free hands go straight to each
+  // other's backs, without the styling. After the setenta his left hand
+  // keeps hers throughout (fig.held).
+  const hats = !!fig.fromHats, nn = fig.dile ? 0 : 1, own = (B) => (fig.dile ? rest(B, -B.d.sO) : styled(B, t));
+  const wOld = fig.free ? 0 : fig.held ? 1 : 1 - ramp(t, 0, 0.35), release = ramp(t, 4.4, 5);
+  const wBack = (hats ? 1 : fig.held ? ramp(t, 0.6, 1.5) : ramp(t, 0.3, 0.7)) * (1 - release), up = hats || fig.dile ? 0 : ramp(t, 0, 0.3), hold = hats ? 1 : ramp(t, 1, 2);
+  const wNew = fig.held ? ramp(t, 0.3, 1.8) : ramp(t, 3.7, 4.1), toGuapea = ramp(t, 5.4, 6.4);
   const old = [], neu = [];
   for (let i = 0; i < n; i++) {
     const L = leads[i].pose, Fo = follows[mod(i + s, n)].pose, Fn = follows[mod(i + s + nn, n)].pose;
-    old[i] = guapeaGrip(L, Fo, t);
+    old[i] = fig.held ? straight(L, Fo).O : guapeaGrip(L, Fo, t);
     neu[i] = lifted(mix(crossGrip(L, Fn, t), guapeaGrip(L, Fn, t), toGuapea), L, Fn, prep);
-    aim(L, mix(mix(rest(L, L.d.sO), old[i], wOld), neu[i], wNew), mix(styled(L, t), herBack(Fn), wBack));
+    aim(L, mix(mix(rest(L, L.d.sO), old[i], wOld), neu[i], wNew), mix(own(L), herBack(Fn), wBack));
     L.around = { I: { on: Fn, w: wBack, side: v3(Fn.l.x, Fn.l.y, -0.3) } }; // around her left side
   }
   for (let j = 0; j < n; j++) {
@@ -619,20 +717,22 @@ function hands(b) {
     // Her shoulder lifts with the arm so the hand clears her head.
     F.shI = add(F.shI, v3(0, 0, 2 * up * (1 - hold)));
     const high = F.Lw(F.nf + 0.5, F.ns - sO * (F.d.shW + 3), F.head.z + 9);
-    const free = mix(mix(styled(F, t), high, up), hisBack(L), hold);
+    const free = mix(mix(own(F), high, up), hisBack(L), hold);
     aim(F, mix(mix(rest(F, sO), old[mod(j - s, n)], wOld), neu[mod(j - s - nn, n)], wNew), mix(free, styled(F, t), release));
     F.around = { I: { on: L, w: hold * (1 - release), side: v3(-L.l.x, -L.l.y, 0.2) } }; // over his right shoulder
   }
 }
 
 // Before the sombrero, on 7-8 he takes both her hands, crossed, his right on
-// top.
+// top; before the setenta, straight.
 function crossPrep(b) {
-  const n = P.couples, m = Math.floor(b / 8), t = b - m * 8, s = shiftBefore(m + 1), w = ramp(t, 6, 7.2);
-  if (!figureAt(m + 1).cross || figureAt(m).cross || w <= 0) return;
+  const n = P.couples, m = Math.floor(b / 8), t = b - m * 8, s = shiftBefore(m + 1), w = ramp(t, 6, 7.2), next = figureAt(m + 1), now = figureAt(m);
+  if (w <= 0 || (next.cross ? now.cross : !next.straight || now.straight)) return;
   for (let i = 0; i < n; i++) {
     const L = leads[i].pose, F = follows[mod(i + s, n)].pose;
-    holdCrossed(L, F, crossed(L, F, 'R'), 'R', w);
+    if (next.cross) { holdCrossed(L, F, crossed(L, F, 'R'), 'R', w); continue; }
+    const g = straight(L, F);
+    for (const B of [L, F]) B.aim = { O: mix(B.aim.O, g.O, w), I: mix(B.aim.I, g.I, w) };
   }
 }
 
