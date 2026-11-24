@@ -187,14 +187,15 @@ const EXHIBELA = {
 // Second bar, an enchufla without letting go: on 1 both hands go up over her
 // head (rise); on 2-3 they pass right shoulder to right shoulder, she on the
 // inside turning to her left under the hands and he turning to his right, so
-// by 5 they have swapped places and stand side by side facing the center,
-// her on his right. On 7, the coronación (hats: [apart, over the heads,
-// on]): his left hand takes her left over his head and his right takes her
-// right over hers, so each wears the other's arm as a hat.
+// by 4 they have swapped places, her on his right, turned toward each other
+// halfway between facing the center and facing each other. On 7, the
+// coronación (hats: [apart, over the heads, on]): his left hand takes her
+// left over his head and his right takes her right over hers, so each wears
+// the other's arm as a hat.
 const SOMBRERO = {
   shift: 0, whoosh: [1], cross: true, top: [[0, 'L']], rise: [0, 0.6], hats: [4.5, 5.5, 6.3],
-  lead: { ...ENCHUFLA_STEPS, root: [[0, 0, 0, 0], [1, -0.1, 3.5, -25], [2, -0.25, 4.5, -60], [3, -0.33, 2.5, -85], [4, -0.32, 0, -92], [5, -0.31, -1.5, -90], [6, -0.3, -2, -90], [8, -0.3, -2, -90]] },
-  follow: { ...ENCHUFLA_STEPS, sway: [[0, 1], [3, 1], [4, -1]], root: [[0, 0, 0, 0], [1, 0.12, -4, 30], [2, 0.3, -5, 70], [3, 0.38, -3.5, 98], [4, 0.37, -2.5, 95], [5, 0.35, -2, 91], [6, 0.34, -2, 90], [8, 0.34, -2, 90]] },
+  lead: { ...ENCHUFLA_STEPS, root: [[0, 0, 0, 0], [1, -0.1, 3.5, -30], [2, -0.25, 4.5, -75], [3, -0.34, 3, -112], [4, -0.35, 1.2, -134], [5, -0.345, 0.2, -136], [6, -0.325, -0.6, -134], [8, -0.32, -0.8, -133]] },
+  follow: { ...ENCHUFLA_STEPS, sway: [[0, 1], [3, 1], [4, -1]], root: [[0, 0, 0, 0], [1, 0.12, -4, 35], [2, 0.3, -5, 85], [3, 0.4, -4, 122], [4, 0.42, -3.2, 138], [5, 0.41, -3, 139], [6, 0.385, -3, 137], [8, 0.38, -3, 136]] },
 };
 // Third bar, a dile que no with the same girl (dile), out of the hats
 // (fromHats): on 1 the hats come off, his right hand slides down to her back
@@ -203,8 +204,8 @@ const SOMBRERO = {
 // left hand holding her right, so the next guy can take her in the dame.
 const DILE_QUE_NO = {
   shift: 0, whoosh: [5], dile: true, free: true, fromHats: true,
-  lead: { ...DAME.lead, root: [[0, -0.3, -2, -90], [1, -0.26, -3, -110], [2, -0.25, -2.8, -110], [3, -0.24, -2.5, -108], [4, -0.23, -0.8, -100], [4.5, -0.2, 0.6, -78], [5, -0.12, 0.8, -50], [6, -0.02, 0.2, -5], [7, 0, 0, 0], [8, 0, 0, 0]] },
-  follow: { ...DAME.follow, sway: [[0, -1], [0.7, 1]], root: [[0, 0.34, -2, 90], [1, 0.4, -5.5, 186], [2, 0.395, -5.6, 188], [3, 0.39, -6, 190], [4, 0.375, -7.2, 192], [4.5, 0.24, -10, 182], [5, 0.1, -6.5, 195], [5.7, 0.01, -0.5, 352], [6, 0, 0, 360], [8, 0, 0, 360]] },
+  lead: { ...DAME.lead, root: [[0, -0.32, -0.8, -133], [1, -0.29, -2.4, -122], [2, -0.27, -2.6, -117], [3, -0.25, -2.5, -111], [4, -0.23, -0.8, -100], [4.5, -0.2, 0.6, -78], [5, -0.12, 0.8, -50], [6, -0.02, 0.2, -5], [7, 0, 0, 0], [8, 0, 0, 0]] },
+  follow: { ...DAME.follow, sway: [[0, -1], [0.7, 1]], root: [[0, 0.38, -3, 136], [1, 0.41, -5.5, 186], [2, 0.395, -5.6, 188], [3, 0.39, -6, 190], [4, 0.375, -7.2, 192], [4.5, 0.24, -10, 182], [5, 0.1, -6.5, 195], [5.7, 0.01, -0.5, 352], [6, 0, 0, 360], [8, 0, 0, 360]] },
 };
 
 // The moves library. Each move starts on a 1 from the guapea, dances its
@@ -595,7 +596,7 @@ function hands(b) {
     old[i] = guapeaGrip(L, Fo, t);
     neu[i] = lifted(mix(crossGrip(L, Fn, t), guapeaGrip(L, Fn, t), toGuapea), L, Fn, prep);
     const back = Fn.Lw(Fn.nf - 2.4, Fn.ns - Fn.d.sO * 1.5, Fn.pz + 4.5); // her left shoulder blade
-    aim(L, mix(hatOn(L), mix(mix(rest(L, L.d.sO), old[i], wOld), neu[i], wNew), off), mix(hatOn(Fn), mix(styled(L, t), back, wBack), off));
+    aim(L, mix(reachable(hatOn(L), L.shO, Fn.shI), mix(mix(rest(L, L.d.sO), old[i], wOld), neu[i], wNew), off), mix(reachable(hatOn(Fn), L.shI, Fn.shO), mix(styled(L, t), back, wBack), off));
     L.around = { I: { on: Fn, w: Math.max(wBack, 1 - off), side: mix(v3(-Fn.f.x * 0.6, -Fn.f.y * 0.6, 1), v3(Fn.l.x, Fn.l.y, -0.3), off) } }; // around her left side
     if (off < 1) L.pole = { O: { w: 1 - off, side: v3(L.l.x * 0.7, L.l.y * 0.7, 1) } };
   }
@@ -605,8 +606,8 @@ function hands(b) {
     F.shI = add(F.shI, v3(0, 0, 2 * up * (1 - hold)));
     const high = F.Lw(F.nf + 0.5, F.ns - sO * (F.d.shW + 3), F.head.z + 9);
     const back = L.Lw(L.nf - 2.2, L.ns - L.d.sO * 1.2, L.nz - 1.5); // his upper back, by the spine
-    const free = mix(hatOn(L), mix(mix(styled(F, t), high, up), back, hold), offUp);
-    aim(F, mix(hatOn(F), mix(mix(rest(F, sO), old[mod(j - s, n)], wOld), neu[mod(j - s - nn, n)], wNew), off), mix(free, styled(F, t), release));
+    const free = mix(reachable(hatOn(L), L.shO, F.shI), mix(mix(styled(F, t), high, up), back, hold), offUp);
+    aim(F, mix(reachable(hatOn(F), L.shI, F.shO), mix(mix(rest(F, sO), old[mod(j - s, n)], wOld), neu[mod(j - s - nn, n)], wNew), off), mix(free, styled(F, t), release));
     F.around = { I: { on: L, w: Math.max(hold * (1 - release), 1 - offUp), side: v3(-L.l.x, -L.l.y, 0.2) } }; // over his right shoulder
     if (off < 1) F.pole = { O: { w: 1 - off, side: v3(-F.l.x * 0.7, -F.l.y * 0.7, 1) } };
   }
