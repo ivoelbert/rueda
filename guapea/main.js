@@ -129,7 +129,8 @@ const ENCHUFLA_O = [[0, -0.6, 0, 2.6], [2, 0.8, 0, 2.6], [5, 0, 0, 2.6], [7, 0, 
 // lift: the joined hands come up on the 7-8 before it. The hand windows are
 // [on from, on by, off from, off by]: over, his left hand takes her right
 // over her head for a turn; hug, his right hand on her back; flair, her free
-// left arm straight up. letGo: when they let go of each other.
+// left arm straight up; look, they turn their heads to each other. letGo:
+// when they let go of each other.
 const ENCHUFLA = {
   shift: 0, whoosh: [1], lift: true, over: [[0, 0.6, 2, 3]], letGo: [3.7, 4.2],
   // On 1 he breaks back and lifts her right hand over her head. On 2-3 he
@@ -147,21 +148,22 @@ const ENCHUFLA = {
 
 // The enchufla doble's first bar; then comes a whole enchufla. It starts
 // like the enchufla, but on 5 his right hand on her back stops her in the
-// middle of her turn, she throws her left arm straight up, and on 5-6-7 he
-// sends her back under his arm. They keep moving through 4 and 8, and are
-// home on the next 1 for the enchufla.
+// middle of her turn, she throws her left arm straight up, and they look at
+// each other over her right shoulder. On 5-6-7 he sends her back under his
+// arm. They keep moving through 4 and 8, and are home on the next 1 for the
+// enchufla.
 const DOBLE = {
-  shift: 0, whoosh: [1, 4], lift: true, over: [[0, 0.7, 5.6, 6.6]], hug: [3.3, 3.9, 4.6, 5.2], flair: [3.8, 4.1, 5.5, 6.4],
-  // On 1 he breaks back and lifts her right hand; on 2-3-4 he steps forward
-  // to his left and turns right, so on 5 he is behind her right shoulder
-  // with his right hand on her back. On 5-6-7 he steps back home, turning
-  // back to his left.
-  lead: { ...ENCHUFLA_STEPS, root: [[-2, 0, 0, 0], [-1, -0.015, 0, 6], [0, 0, 0.5, 15], [1, -0.06, 2.5, -5], [2, -0.12, 3.6, -28], [3, -0.17, 3.6, -48], [3.75, -0.19, 3.1, -60], [4, -0.19, 3, -62], [4.5, -0.17, 3, -55], [5, -0.13, 2.7, -40], [6, -0.07, 1.9, -20], [7, -0.025, 1.1, 0], [8, 0, 0.5, 15]] },
-  // On 2-3-4 she walks forward and turns to her left under his arm. On 5
-  // he stops her facing the center with her back to him, and her left arm
-  // goes up; on 5-6-7 she turns back to her right under his arm and walks
-  // home, facing him again on the next 1.
-  follow: { ...ENCHUFLA_STEPS, root: [[-2, 0, 0, 0], [-1, 0.015, 0, -6], [0, 0, 0.5, -15], [1, 0.08, -1.6, 18], [2, 0.17, -3.4, 55], [3, 0.215, -4, 80], [3.75, 0.24, -4.3, 100], [4, 0.243, -4.3, 103], [4.5, 0.22, -4, 88], [5, 0.17, -3.2, 62], [6, 0.09, -1.8, 22], [7, 0.03, -0.4, -4], [8, 0, 0.5, -15]] },
+  shift: 0, whoosh: [1, 4], lift: true, over: [[0, 0.7, 5.6, 6.6]], hug: [3.3, 3.9, 4.6, 5.2], flair: [3.8, 4.1, 5.5, 6.4], look: [3.4, 3.9, 5, 5.8],
+  // He stays on his side: on 1 he breaks back and lifts her right hand, on
+  // 2-3-4 he steps a little forward and turns slightly to his right, so on
+  // 5 she is at his right, his right hand around her back. On 5-6-7 he
+  // steps back home, opening a little to his left for the enchufla.
+  lead: { ...ENCHUFLA_STEPS, root: [[-2, 0, 0, 0], [-1, -0.015, 0, 6], [0, 0, 0.5, 15], [1, -0.035, 0.5, 10], [2, -0.07, 0.6, 0], [3, -0.095, 0.7, -9], [3.75, -0.102, 0.7, -14], [4, -0.103, 0.7, -15], [4.5, -0.095, 0.7, -11], [5, -0.075, 0.6, -3], [6, -0.04, 0.5, 9], [7, -0.012, 0.5, 19], [8, 0, 0.5, 25]] },
+  // On 2-3-4 she walks forward on the inside and turns to her left under his
+  // arm. On 5 he stops her partway round, with him at her right shoulder,
+  // and her left arm goes up; on 5-6-7 she spins back to her right under
+  // his arm, a little past facing him, and walks home for the enchufla.
+  follow: { ...ENCHUFLA_STEPS, root: [[-2, 0, 0, 0], [-1, 0.015, 0, -6], [0, 0, 0.5, -15], [1, 0.07, -1.5, 5], [2, 0.15, -3.5, 30], [3, 0.19, -4.7, 48], [3.75, 0.205, -5.2, 60], [4, 0.207, -5.2, 63], [4.5, 0.19, -4.8, 50], [5, 0.15, -3.8, 32], [6, 0.08, -1.8, 2], [7, 0.025, -0.4, -22], [8, 0, 0.5, -35]] },
 };
 
 // The moves library. Each move starts on a 1 from the guapea, dances its
@@ -171,8 +173,10 @@ const fromOne = (tracks) => ({ ...tracks, root: tracks.root.filter(([b]) => b >=
 // After an enchufla they are already open to the center with their hands
 // free, so its dame starts from its 1.
 const DAME_AFTER_ENCHUFLA = { ...DAME, free: true, lead: fromOne(DAME.lead), follow: fromOne(DAME.follow) };
-// After the doble's first bar they walk straight into the enchufla's 1.
-const ENCHUFLA_AFTER_DOBLE = { ...ENCHUFLA, lead: fromOne(ENCHUFLA.lead), follow: fromOne(ENCHUFLA.follow) };
+// After the doble's first bar they walk straight into the enchufla's 1,
+// still wound a little past facing each other from being sent back.
+const wound = (tracks, turn) => ({ ...tracks, root: [[0, 0, 0.5, turn], ...fromOne(tracks).root.slice(1)] });
+const ENCHUFLA_AFTER_DOBLE = { ...ENCHUFLA, lead: wound(ENCHUFLA.lead, 25), follow: wound(ENCHUFLA.follow, -35) };
 const MOVES = {
   dame: {
     id: 'dame', name: 'DAME', say: '¡Dame!', bars: [DAME],
@@ -434,7 +438,9 @@ function hands(b) {
     // her head and brings it down after. In the doble his right hand stops
     // her by her back (hug) and her free left arm goes straight up (flair).
     const win = (w) => (w ? ramp(t, w[0], w[1]) * (1 - ramp(t, w[2], w[3])) : 0);
-    const over = Math.max(...fig.over.map(win)), hug = win(fig.hug), flair = win(fig.flair);
+    const over = Math.max(...fig.over.map(win)), hug = win(fig.hug), flair = win(fig.flair), look = win(fig.look);
+    // How far to turn the head to see p, at most a little past the shoulder.
+    const toward = (B, p) => clamp(mod(Math.atan2(p.y - B.head.y, p.x - B.head.x) - B.h + Math.PI, TAU) - Math.PI, -1.5, 1.5);
     const letGo = fig.letGo ? ramp(t, ...fig.letGo) : 0, up = Math.max(1 - ramp(t, 2, 3), prep);
     for (let i = 0; i < n; i++) {
       const L = leads[i].pose, F = follows[mod(i + s, n)].pose;
@@ -447,6 +453,7 @@ function hands(b) {
       aim(L, mix(j, rest(L, L.d.sO), letGo), mix(styled(L, t), back, hug));
       aim(F, mix(j, rest(F, F.d.sO), letGo), mix(styled(F, t), sky, flair));
       if (hug > 0) L.around = { I: { on: F, w: hug, side: v3(-L.l.x, -L.l.y, -0.3) } }; // elbow out to his right
+      if (look > 0) { L.yaw = toward(L, F.head) * look; F.yaw = toward(F, L.head) * look; }
     }
     return;
   }
@@ -575,8 +582,10 @@ function skirt(d, B) {
   for (const p of hem) if (depth(p) < c - 1) spr.dot(proj(p), TRIM, 1);
 }
 
+// B.yaw turns the head on the shoulders (+ = to the left).
 function head(d, B) {
-  const look = d.look, h = B.head, f = B.f, l = B.l, R = HEAD_R;
+  const look = d.look, h = B.head, R = HEAD_R, c = Math.cos(B.yaw || 0), sn = Math.sin(B.yaw || 0);
+  const f = { x: B.f.x * c - B.f.y * sn, y: B.f.x * sn + B.f.y * c }, l = { x: -f.y, y: f.x };
   const W3 = (fw, sd, z) => v3(h.x + f.x * fw + l.x * sd, h.y + f.y * fw + l.y * sd, h.z + z);
   const facing = f.x * TO_CAM.x + f.y * TO_CAM.y;
   spr.chain([proj(B.neck), proj(W3(0, 0, -R * 0.7))], [2.6], look.skin, false);
