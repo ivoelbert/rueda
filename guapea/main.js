@@ -177,25 +177,26 @@ const DOBLE = {
 // it he takes both her hands, his right on top.
 //
 // First bar, an exhíbela: on 1-2-3 they open out a little; on 5-6-7 she
-// turns once round to her right under both hands (spin: the hands' window
-// over her head), which crosses them the other way, his left on top.
+// turns once round to her right under both hands (up: the window the hands
+// are up over her head), which crosses them the other way, his left on top.
 const EXHIBELA = {
-  shift: 0, whoosh: [5], cross: true, top: [[0, 'R'], [5, 'L']], spin: [4, 4.6, 6, 6.8],
+  shift: 0, whoosh: [5], cross: true, top: [[0, 'R'], [5, 'L']], up: [4, 4.6, 6, 6.8],
   lead: { ...ENCHUFLA_STEPS, root: [[-2, 0, 0, 0], [-1, -0.02, 0, 0], [0, -0.02, 0, 0], [1, 0.04, 0, 0], [2, 0.02, 0, 0], [3, -0.02, 0, 0], [4, -0.08, 0, 0], [6.5, -0.08, 0, 0], [8, 0, 0, 0]] },
   follow: { ...ENCHUFLA_STEPS, root: [[-2, 0, 0, 0], [-1, 0.02, 0, 0], [0, 0.02, 0, 0], [1, -0.04, 0, 0], [2, -0.02, 0, 0], [3, 0.02, 0, 0], [4, 0.07, 0, 0], [5, 0.08, 0, -100], [6, 0.08, 0, -280], [7, 0.05, 0, -360], [8, 0, 0, -360]] },
 };
 // Second bar, an enchufla without letting go: on 1 both hands go up over her
-// head (rise); on 2-3 they pass right shoulder to right shoulder, she on the
-// inside turning to her left under the hands and he turning to his right, so
-// by 4 they have swapped places, her on his right, turned toward each other
-// halfway between facing the center and facing each other. On 7, the
-// coronación (hats: [apart, over the heads, on]): his left hand takes her
-// left over his head and his right takes her right over hers, so each wears
-// the other's arm as a hat.
+// head; on 2-3 they pass right shoulder to right shoulder, she on the inside
+// turning to her left under the hands and he turning to his right. They
+// finish it on 4-5 a step apart, swapped, her on his right, turned toward
+// each other halfway between facing the center and facing each other, the
+// hands down low between them. On 5-6 they step back in lifting the hands
+// over their heads, and on 7, the coronación (hats: [apart, over the heads,
+// on]): his left hand takes her left over his head and his right takes her
+// right over hers, so each wears the other's arm as a hat.
 const SOMBRERO = {
-  shift: 0, whoosh: [1], cross: true, top: [[0, 'L']], rise: [0, 0.6], hats: [4.5, 5.5, 6.3],
-  lead: { ...ENCHUFLA_STEPS, root: [[0, 0, 0, 0], [1, -0.1, 3.5, -30], [2, -0.25, 4.5, -75], [3, -0.34, 3, -112], [4, -0.35, 1.2, -134], [5, -0.345, 0.2, -136], [6, -0.325, -0.6, -134], [8, -0.32, -0.8, -133]] },
-  follow: { ...ENCHUFLA_STEPS, sway: [[0, 1], [3, 1], [4, -1]], root: [[0, 0, 0, 0], [1, 0.12, -4, 35], [2, 0.3, -5, 85], [3, 0.4, -4, 122], [4, 0.42, -3.2, 138], [5, 0.41, -3, 139], [6, 0.385, -3, 137], [8, 0.38, -3, 136]] },
+  shift: 0, whoosh: [1], cross: true, top: [[0, 'L']], up: [0, 0.6, 2.6, 3.6], hats: [4.5, 5.5, 6.3],
+  lead: { ...ENCHUFLA_STEPS, root: [[0, 0, 0, 0], [1, -0.1, 3.5, -30], [2, -0.25, 4.5, -75], [3, -0.36, 3, -115], [4, -0.405, 1.6, -136], [5, -0.395, 0.6, -137], [6, -0.335, -0.5, -134], [8, -0.32, -0.8, -133]] },
+  follow: { ...ENCHUFLA_STEPS, sway: [[0, 1], [3, 1], [4, -1]], root: [[0, 0, 0, 0], [1, 0.12, -4, 35], [2, 0.3, -5, 85], [3, 0.43, -4.2, 124], [4, 0.475, -3.7, 139], [5, 0.465, -3.4, 140], [6, 0.395, -3, 137], [8, 0.38, -3, 136]] },
 };
 // Third bar, a dile que no with the same girl (dile), out of the hats
 // (fromHats): on 1 the hats come off, his right hand slides down to her back
@@ -495,12 +496,12 @@ function lifted(j, L, F, u) {
 // left, her right), the partner's arm lying over the wearer's head.
 const hatOn = (B) => B.Lw(B.nf - 2.6, B.ns + B.d.sO * (B.d.shW - 1.5), B.nz + 5);
 // Both hands crossed: the grips of the left hands (LL) and the right hands
-// (RR), the top pair a little higher. They start at the chest between them,
+// (RR), the top pair a little higher. They start low between them,
 // go up over her head (up), then each over its wearer's head (apart: LL his,
 // RR hers) and down behind the neck (on).
 function crossed(L, F, top, up = 0, apart = 0, on = 0) {
   const c = mix(L.neck, F.neck, 0.5), h = v3(lerp(L.neck.x, F.head.x, 0.65), lerp(L.neck.y, F.head.y, 0.65), F.head.z + 4);
-  const grip = (W, dz) => mix(mix(mix(v3(c.x, c.y, c.z - 4 + dz), v3(h.x, h.y, h.z + dz), up), v3(W.head.x, W.head.y, W.head.z + 5), apart), hatOn(W), on);
+  const grip = (W, dz) => mix(mix(mix(v3(c.x, c.y, c.z - 6 + dz), v3(h.x, h.y, h.z + dz), up), v3(W.head.x, W.head.y, W.head.z + 5), apart), hatOn(W), on);
   return { LL: reachable(grip(L, top === 'L' ? 0.8 : -0.8), L.shO, F.shI), RR: reachable(grip(F, top === 'R' ? 0.8 : -0.8), L.shI, F.shO) };
 }
 // Each takes the crossed grips, and the top pair's forearms are drawn over
@@ -524,7 +525,7 @@ function hands(b) {
     // arm: his right around behind her neck, her left around behind his, and
     // their own outside arms bent with the hand behind the neck.
     const top = [...fig.top].reverse().find(([k]) => t >= k)[1];
-    const up = fig.spin ? win(fig.spin) : ramp(t, ...fig.rise);
+    const up = win(fig.up);
     const apart = fig.hats ? ramp(t, fig.hats[0], fig.hats[1]) : 0, on = fig.hats ? ramp(t, fig.hats[1], fig.hats[2]) : 0;
     for (let i = 0; i < n; i++) {
       const L = leads[i].pose, F = follows[mod(i + s, n)].pose;
