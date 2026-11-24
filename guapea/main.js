@@ -171,6 +171,42 @@ const DOBLE = {
   follow: { ...ENCHUFLA_STEPS, sway: [[0, 1], [2.2, 1], [3, -1], [4.8, -1], [5.6, 1]], root: [[-2, 0, 0, 0], [-1, 0.015, 0, -6], [0, 0, 0.5, -15], [1, 0.09, -2, 20], [2, 0.2, -4, 65], [3, 0.255, -4.6, 100], [3.75, 0.272, -4.6, 117], [4, 0.275, -4.5, 120], [4.5, 0.25, -4.6, 105], [5, 0.19, -3.9, 75], [6, 0.1, -1.8, 25], [7, 0.03, -0.4, -15], [8, 0, 0.5, -35]] },
 };
 
+// The sombrero's first two bars hold both hands, crossed: his right holds her
+// right and his left her left (cross: see hands()), the pair named in top on
+// top from a beat on. It is called on 5 like the others; on the 7-8 before
+// it he takes both her hands, his right on top.
+//
+// First bar, an exhíbela: on 1-2-3 they open out a little; on 5-6-7 she
+// turns once round to her right under both hands (spin: the hands' window
+// over her head), which crosses them the other way, his left on top.
+const EXHIBELA = {
+  shift: 0, whoosh: [5], cross: true, top: [[0, 'R'], [5, 'L']], spin: [4, 4.6, 6, 6.8],
+  lead: { ...ENCHUFLA_STEPS, root: [[-2, 0, 0, 0], [-1, -0.02, 0, 0], [0, -0.02, 0, 0], [1, 0.04, 0, 0], [2, 0.02, 0, 0], [3, -0.02, 0, 0], [4, -0.08, 0, 0], [6.5, -0.08, 0, 0], [8, 0, 0, 0]] },
+  follow: { ...ENCHUFLA_STEPS, root: [[-2, 0, 0, 0], [-1, 0.02, 0, 0], [0, 0.02, 0, 0], [1, -0.04, 0, 0], [2, -0.02, 0, 0], [3, 0.02, 0, 0], [4, 0.07, 0, 0], [5, 0.08, 0, -100], [6, 0.08, 0, -280], [7, 0.05, 0, -360], [8, 0, 0, -360]] },
+};
+// Second bar, an enchufla without letting go: on 1 both hands go up over her
+// head (rise); on 2-3 they pass right shoulder to right shoulder, she on the
+// inside turning to her left under the hands and he turning to his right, so
+// by 5 they have swapped places and stand side by side facing the center,
+// her on his right. On 7, the coronación (hats: [apart, over the heads,
+// on]): his left hand takes her left over his head and his right takes her
+// right over hers, so each wears the other's arm as a hat.
+const SOMBRERO = {
+  shift: 0, whoosh: [1], cross: true, top: [[0, 'L']], rise: [0, 0.6], hats: [4.5, 5.5, 6.3],
+  lead: { ...ENCHUFLA_STEPS, root: [[0, 0, 0, 0], [1, -0.1, 3.5, -25], [2, -0.25, 4.5, -60], [3, -0.33, 2.5, -85], [4, -0.32, 0, -92], [5, -0.31, -1.5, -90], [6, -0.3, -2, -90], [8, -0.3, -2, -90]] },
+  follow: { ...ENCHUFLA_STEPS, sway: [[0, 1], [3, 1], [4, -1]], root: [[0, 0, 0, 0], [1, 0.12, -4, 30], [2, 0.3, -5, 70], [3, 0.38, -3.5, 98], [4, 0.37, -2.5, 95], [5, 0.35, -2, 91], [6, 0.34, -2, 90], [8, 0.34, -2, 90]] },
+};
+// Third bar, a dile que no with the same girl (dile), out of the hats
+// (fromHats): on 1 the hats come off, his right hand slides down to her back
+// and her left arm goes up off his head as she turns to face him. On 5-6-7
+// she crosses in front of him and turns to face him, both home by 7, his
+// left hand holding her right, so the next guy can take her in the dame.
+const DILE_QUE_NO = {
+  shift: 0, whoosh: [5], dile: true, free: true, fromHats: true,
+  lead: { ...DAME.lead, root: [[0, -0.3, -2, -90], [1, -0.26, -3, -110], [2, -0.25, -2.8, -110], [3, -0.24, -2.5, -108], [4, -0.23, -0.8, -100], [4.5, -0.2, 0.6, -78], [5, -0.12, 0.8, -50], [6, -0.02, 0.2, -5], [7, 0, 0, 0], [8, 0, 0, 0]] },
+  follow: { ...DAME.follow, sway: [[0, -1], [0.7, 1]], root: [[0, 0.34, -2, 90], [1, 0.4, -5.5, 186], [2, 0.395, -5.6, 188], [3, 0.39, -6, 190], [4, 0.375, -7.2, 192], [4.5, 0.24, -10, 182], [5, 0.1, -6.5, 195], [5.7, 0.01, -0.5, 352], [6, 0, 0, 360], [8, 0, 0, 360]] },
+};
+
 // The moves library. Each move starts on a 1 from the guapea, dances its
 // bars (one figure per 8 counts) and ends in the guapea; the hands are
 // scripted in hands().
@@ -200,6 +236,10 @@ const MOVES = {
   doble: {
     id: 'doble', name: 'ENCHUFLA DOBLE', say: '¡Enchufla doble!', bars: [DOBLE, ENCHUFLA_AFTER_DOBLE, DAME_AFTER_ENCHUFLA],
     blurb: 'She starts the enchufla; on 5 his hand on her back stops her, her free arm goes up, and he sends her back. Then a whole enchufla. Everyone has a new partner.',
+  },
+  sombrero: {
+    id: 'sombrero', name: 'SOMBRERO', say: '¡Sombrero!', bars: [EXHIBELA, SOMBRERO, DILE_QUE_NO, DAME],
+    blurb: 'Both hands crossed: an exhíbela, then an enchufla without letting go, and on 7 the coronación, each wearing the other\'s arm as a hat. A dile que no hands her on, then a dame. Everyone has a new partner.',
   },
 };
 
@@ -450,16 +490,60 @@ function lifted(j, L, F, u) {
   return reachable(v3(lerp(j.x, m.x, u), lerp(j.y, m.y, u), j.z + 5 * u), L.shO, F.shO);
 }
 
+// The sombrero's hat: a hand behind the wearer's neck on the outside (his
+// left, her right), the partner's arm lying over the wearer's head.
+const hatOn = (B) => B.Lw(B.nf - 2.6, B.ns + B.d.sO * (B.d.shW - 1.5), B.nz + 5);
+// Both hands crossed: the grips of the left hands (LL) and the right hands
+// (RR), the top pair a little higher. They start at the chest between them,
+// go up over her head (up), then each over its wearer's head (apart: LL his,
+// RR hers) and down behind the neck (on).
+function crossed(L, F, top, up = 0, apart = 0, on = 0) {
+  const c = mix(L.neck, F.neck, 0.5), h = v3(lerp(L.neck.x, F.head.x, 0.65), lerp(L.neck.y, F.head.y, 0.65), F.head.z + 4);
+  const grip = (W, dz) => mix(mix(mix(v3(c.x, c.y, c.z - 4 + dz), v3(h.x, h.y, h.z + dz), up), v3(W.head.x, W.head.y, W.head.z + 5), apart), hatOn(W), on);
+  return { LL: reachable(grip(L, top === 'L' ? 0.8 : -0.8), L.shO, F.shI), RR: reachable(grip(F, top === 'R' ? 0.8 : -0.8), L.shI, F.shO) };
+}
+// Each takes the crossed grips, and the top pair's forearms are drawn over
+// both of them (render).
+// w blends from their aims so far; top is false once nothing is on top.
+function holdCrossed(L, F, g, top, w = 1) {
+  const to = (a, p) => (w < 1 ? mix(a, p, w) : p);
+  L.aim = { O: to(L.aim?.O, g.LL), I: to(L.aim?.I, g.RR) };
+  F.aim = { O: to(F.aim?.O, g.RR), I: to(F.aim?.I, g.LL) };
+  if (top && w > 0.5) { L.top = { n: top === 'R' ? 'I' : 'O', mate: F }; F.top = { n: top === 'R' ? 'O' : 'I', mate: L }; }
+}
+
 function hands(b) {
   const n = P.couples, m = Math.floor(b / 8), t = b - m * 8, s = shiftBefore(m), fig = figureAt(m);
   const aim = (B, O, I) => { B.aim = { O, I }; };
   const prep = figureAt(m + 1).lift ? ramp(t, 6, 7.5) : 0;
   palms = [];
+  const win = (w) => (w ? ramp(t, w[0], w[1]) * (1 - ramp(t, w[2], w[3])) : 0);
+  if (fig.cross) {
+    // The sombrero's crossed hands. In the coronación each wears the other's
+    // arm: his right around behind her neck, her left around behind his, and
+    // their own outside arms bent with the hand behind the neck.
+    const top = [...fig.top].reverse().find(([k]) => t >= k)[1];
+    const up = fig.spin ? win(fig.spin) : ramp(t, ...fig.rise);
+    const apart = fig.hats ? ramp(t, fig.hats[0], fig.hats[1]) : 0, on = fig.hats ? ramp(t, fig.hats[1], fig.hats[2]) : 0;
+    for (let i = 0; i < n; i++) {
+      const L = leads[i].pose, F = follows[mod(i + s, n)].pose;
+      const lift = 2 * up * (1 - on); // her shoulders lift with the arms
+      F.shO = add(F.shO, v3(0, 0, lift)); F.shI = add(F.shI, v3(0, 0, lift));
+      holdCrossed(L, F, crossed(L, F, top, up, apart, on), on < 0.5 && top);
+      if (on > 0) {
+        const behind = (W) => v3(-W.f.x * 0.6, -W.f.y * 0.6, 1), bent = (B) => v3(B.l.x * B.d.sO * 0.7, B.l.y * B.d.sO * 0.7, 1);
+        L.around = { I: { on: F, w: on, side: behind(F) } };
+        F.around = { I: { on: L, w: on, side: behind(L) } };
+        L.pole = { O: { w: on, side: bent(L) } };
+        F.pole = { O: { w: on, side: bent(F) } };
+      }
+    }
+    return;
+  }
   if (fig.over) {
     // Turns under the arm: for each turn his left hand takes her right over
     // her head and brings it down after. In the doble his right hand stops
     // her by her back (hug) and her free left arm goes straight up (flair).
-    const win = (w) => (w ? ramp(t, w[0], w[1]) * (1 - ramp(t, w[2], w[3])) : 0);
     const over = Math.max(...fig.over.map(win)), hug = win(fig.hug), flair = win(fig.flair), look = win(fig.look);
     // How far to turn the head to see p, at most a little past the shoulder.
     const toward = (B, p) => clamp(mod(Math.atan2(p.y - B.head.y, p.x - B.head.x) - B.h + Math.PI, TAU) - Math.PI, -1.5, 1.5);
@@ -480,7 +564,7 @@ function hands(b) {
     }
     return;
   }
-  if (!fig.shift) {
+  if (!fig.shift && !fig.dile) {
     // Guapea: the free palms meet on 5.
     const press = track(PRESS, t, 0.42, 0, inOut);
     for (let i = 0; i < n; i++) {
@@ -497,37 +581,56 @@ function hands(b) {
   // comes down over his right arm onto his back by 3. On 5 they let go of
   // each other's backs and his left hand takes her right as she crosses in
   // front of him; the grip is back in the guapea by 7. After an enchufla
-  // (fig.free) they have already let go of their old partners.
+  // (fig.free) they have already let go of their old partners. In the
+  // sombrero's dile que no (fig.dile) it is his own partner, and on 1 the
+  // hats come off (fig.fromHats): his right hand slides from behind her neck
+  // down to her back, and her left arm goes up off his head.
+  const nn = fig.dile ? 0 : 1, off = fig.fromHats ? ramp(t, 0, 0.6) : 1, offUp = fig.fromHats ? ramp(t, 0, 0.3) : 1;
   const wOld = fig.free ? 0 : 1 - ramp(t, 0, 0.35), release = ramp(t, 4.4, 5);
-  const wBack = ramp(t, 0.3, 0.7) * (1 - release), up = ramp(t, 0, 0.3), hold = ramp(t, 1, 2);
+  const wBack = (fig.fromHats ? ramp(t, 0, 0.5) : ramp(t, 0.3, 0.7)) * (1 - release), up = ramp(t, 0, 0.3), hold = ramp(t, 1, 2);
   const wNew = ramp(t, 3.7, 4.1), toGuapea = ramp(t, 5.4, 6.4);
   const old = [], neu = [];
   for (let i = 0; i < n; i++) {
-    const L = leads[i].pose, Fo = follows[mod(i + s, n)].pose, Fn = follows[mod(i + s + 1, n)].pose;
+    const L = leads[i].pose, Fo = follows[mod(i + s, n)].pose, Fn = follows[mod(i + s + nn, n)].pose;
     old[i] = guapeaGrip(L, Fo, t);
     neu[i] = lifted(mix(crossGrip(L, Fn, t), guapeaGrip(L, Fn, t), toGuapea), L, Fn, prep);
     const back = Fn.Lw(Fn.nf - 2.4, Fn.ns - Fn.d.sO * 1.5, Fn.pz + 4.5); // her left shoulder blade
-    aim(L, mix(mix(rest(L, L.d.sO), old[i], wOld), neu[i], wNew), mix(styled(L, t), back, wBack));
-    L.around = { I: { on: Fn, w: wBack, side: v3(Fn.l.x, Fn.l.y, -0.3) } }; // around her left side
+    aim(L, mix(hatOn(L), mix(mix(rest(L, L.d.sO), old[i], wOld), neu[i], wNew), off), mix(hatOn(Fn), mix(styled(L, t), back, wBack), off));
+    L.around = { I: { on: Fn, w: Math.max(wBack, 1 - off), side: mix(v3(-Fn.f.x * 0.6, -Fn.f.y * 0.6, 1), v3(Fn.l.x, Fn.l.y, -0.3), off) } }; // around her left side
+    if (off < 1) L.pole = { O: { w: 1 - off, side: v3(L.l.x * 0.7, L.l.y * 0.7, 1) } };
   }
   for (let j = 0; j < n; j++) {
-    const F = follows[j].pose, sO = F.d.sO, L = leads[mod(j - s - 1, n)].pose;
+    const F = follows[j].pose, sO = F.d.sO, L = leads[mod(j - s - nn, n)].pose;
     // Her shoulder lifts with the arm so the hand clears her head.
     F.shI = add(F.shI, v3(0, 0, 2 * up * (1 - hold)));
     const high = F.Lw(F.nf + 0.5, F.ns - sO * (F.d.shW + 3), F.head.z + 9);
     const back = L.Lw(L.nf - 2.2, L.ns - L.d.sO * 1.2, L.nz - 1.5); // his upper back, by the spine
-    const free = mix(mix(styled(F, t), high, up), back, hold);
-    aim(F, mix(mix(rest(F, sO), old[mod(j - s, n)], wOld), neu[mod(j - s - 1, n)], wNew), mix(free, styled(F, t), release));
-    F.around = { I: { on: L, w: hold * (1 - release), side: v3(-L.l.x, -L.l.y, 0.2) } }; // over his right shoulder
+    const free = mix(hatOn(L), mix(mix(styled(F, t), high, up), back, hold), offUp);
+    aim(F, mix(hatOn(F), mix(mix(rest(F, sO), old[mod(j - s, n)], wOld), neu[mod(j - s - nn, n)], wNew), off), mix(free, styled(F, t), release));
+    F.around = { I: { on: L, w: Math.max(hold * (1 - release), 1 - offUp), side: v3(-L.l.x, -L.l.y, 0.2) } }; // over his right shoulder
+    if (off < 1) F.pole = { O: { w: 1 - off, side: v3(-F.l.x * 0.7, -F.l.y * 0.7, 1) } };
+  }
+}
+
+// Before the sombrero, on 7-8 he takes both her hands, crossed, his right on
+// top.
+function crossPrep(b) {
+  const n = P.couples, m = Math.floor(b / 8), t = b - m * 8, s = shiftBefore(m + 1), w = ramp(t, 6, 7.2);
+  if (!figureAt(m + 1).cross || figureAt(m).cross || w <= 0) return;
+  for (let i = 0; i < n; i++) {
+    const L = leads[i].pose, F = follows[mod(i + s, n)].pose;
+    holdCrossed(L, F, crossed(L, F, 'R'), 'R', w);
   }
 }
 
 // An arm around a partner (B.around) bends its elbow out past the partner's
-// side, so it reaches round them instead of through them.
+// side, so it reaches round them instead of through them. B.pole points an
+// elbow some other way, such as out and up for a hand behind the neck.
 function reach(B) {
   const sO = B.d.sO, pole = (n, side) => {
-    const p = v3(B.l.x * side * 0.7 - B.f.x * 0.35, B.l.y * side * 0.7 - B.f.y * 0.35, -1), a = B.around?.[n];
-    return a ? mix(p, a.side, a.w) : p;
+    let p = v3(B.l.x * side * 0.7 - B.f.x * 0.35, B.l.y * side * 0.7 - B.f.y * 0.35, -1);
+    for (const a of [B.around?.[n], B.pole?.[n]]) if (a) p = mix(p, a.side, a.w);
+    return p;
   };
   const O = ik(B.shO, B.aim.O, ARM[0], ARM[1], pole('O', sO)), I = ik(B.shI, B.aim.I, ARM[0], ARM[1], pole('I', -sO));
   B.arms = { O: { sh: B.shO, el: O.mid, hand: O.end }, I: { sh: B.shI, el: I.mid, hand: I.end } };
@@ -569,9 +672,9 @@ function drawDancer(d, B, A) {
   } });
   for (const n of ['O', 'I']) {
     const a = A[n];
-    // Around a partner, the forearm and hand are drawn with the partner
-    // (render); the upper arm stays with the body.
-    if (B.around?.[n]?.w > 0.5) items.push({ z: (depth(a.sh) + depth(a.el)) / 2, draw: () => arm(d, a, 'upper') });
+    // Around a partner, or on top in crossed hands, the forearm and hand are
+    // drawn later (render); the upper arm stays with the body.
+    if (B.around?.[n]?.w > 0.5 || B.top?.n === n) items.push({ z: (depth(a.sh) + depth(a.el)) / 2, draw: () => arm(d, a, 'upper') });
     else items.push({ z: (depth(a.el) + depth(a.hand)) / 2, draw: () => arm(d, a) });
   }
   items.sort((a, b) => b.z - a.z).forEach((p) => p.draw());
@@ -778,6 +881,7 @@ let last = performance.now(), lastB = null, warmedFor = null;
 function poseAll(b, dt) {
   for (const d of dancers()) d.pose = body(d, b);
   hands(b);
+  crossPrep(b);
   for (const d of dancers()) { reach(d.pose); spring(d, d.pose, dt); }
 }
 
@@ -836,11 +940,15 @@ function render(b, dt) {
     if (!around.has(on)) around.set(on, { before: [], after: [] });
     around.get(on)[k].push(() => arm(d, d.pose.arms[n], 'fore'));
   }
+  // In crossed hands, the top pair's forearms show over both partners.
+  const drawn = new Set();
   dancers().sort((a, c) => depth(c.pose.pelvis) - depth(a.pose.pelvis)).forEach((d) => {
-    const w = around.get(d.pose);
+    const w = around.get(d.pose), top = d.pose.top;
     w?.before.forEach((f) => f());
     drawDancer(d, d.pose, d.pose.arms);
     w?.after.forEach((f) => f());
+    if (top && drawn.has(top.mate)) for (const B of [d.pose, top.mate]) arm(B.d, B.arms[B.top.n], 'fore');
+    drawn.add(d.pose);
   });
   spr.commit(out);
   const sh = shake > 0.05 ? Math.round((Math.random() - 0.5) * 2 * shake) : 0;
