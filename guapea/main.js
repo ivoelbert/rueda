@@ -308,6 +308,11 @@ const DAME_AFTER_ENCHUFLA = {
 // still wound a little past facing each other from being sent back.
 const wound = (tracks, turn) => ({ ...tracks, root: [[0, 0, 0.5, turn], ...fromOne(tracks).root.slice(1)] });
 const ENCHUFLA_AFTER_DOBLE = { ...ENCHUFLA, lead: wound(ENCHUFLA.lead, 25), follow: wound(ENCHUFLA.follow, -35) };
+// The pelotas: an enchufla where everyone claps (claps: the counts, 0-7) on
+// the way to the new partner, on 7, on 7 and 8, or on 7, 8 and the dame's 1.
+const PELOTA_1 = { ...ENCHUFLA, claps: [6] };
+const PELOTA_2 = { ...ENCHUFLA, claps: [6, 7] };
+const DAME_CLAP = { ...DAME_AFTER_ENCHUFLA, claps: [0] };
 const MOVES = {
   dame: {
     id: 'dame', name: 'DAME', say: '¡Dame!', bars: [DAME],
@@ -332,6 +337,22 @@ const MOVES = {
   uno: {
     id: 'uno', name: 'UNO', say: '¡Uno!', bars: [UNO, UNO_CORONACION, DILE_QUE_NO, DAME],
     blurb: 'Hands like a handshake, he steps in behind her and they swap sides behind each other; on 5 her arm goes over her head into the coronación. A dile que no hands her on, then a dame. Everyone has a new partner.',
+  },
+  pelota1: {
+    id: 'pelota1', name: 'PELOTA UNO', say: '¡Pelota uno!', bars: [PELOTA_1, DAME_AFTER_ENCHUFLA],
+    blurb: 'An enchufla, and everyone claps on 7 on the way to the new partner. Then the dame. Everyone has a new partner.',
+  },
+  pelota2: {
+    id: 'pelota2', name: 'PELOTA DOS', say: '¡Pelota dos!', bars: [PELOTA_2, DAME_AFTER_ENCHUFLA],
+    blurb: 'An enchufla with two claps, on 7 and 8, then the dame. Everyone has a new partner.',
+  },
+  pelota3: {
+    id: 'pelota3', name: 'PELOTA TRES', say: '¡Pelota tres!', bars: [PELOTA_2, DAME_CLAP],
+    blurb: 'An enchufla with three claps, on 7, 8 and the dame\'s 1, then the rest of the dame. Everyone has a new partner.',
+  },
+  festival: {
+    id: 'festival', name: 'FESTIVAL DE PELOTAS', say: '¡Festival de pelotas!', bars: [PELOTA_1, DAME_AFTER_ENCHUFLA, PELOTA_2, DAME_AFTER_ENCHUFLA, PELOTA_2, DAME_CLAP],
+    blurb: 'Pelota uno, dos and tres back to back: one clap, then two, then three, with a new partner each time.',
   },
 };
 
@@ -819,6 +840,38 @@ function crossPrep(b) {
   }
 }
 
+// Claps (fig.claps): everyone's hands come up in front of the chin a little
+// apart before the first clap, meet on each clapped count, open again, and
+// after the last go back to what they were doing. It reads the figures on
+// both sides of the bar line, so the pelota tres's last clap can land on the
+// dame's 1. Each clap leaves a spark between the hands (sparks: [spot, age]).
+let sparks = [];
+function clapHands(b) {
+  const m = Math.floor(b / 8), at = [];
+  sparks = [];
+  for (let mm = m - 1; mm <= m + 1; mm++) for (const c of figureAt(mm).claps ?? []) at.push(mm * 8 + c);
+  if (!at.length) return;
+  // Claps a beat apart are one run; the hands stay up through a run.
+  at.sort((x, y) => x - y);
+  let ready = 0;
+  for (let i = 0, j = 0; i < at.length; i = j) {
+    while (j + 1 < at.length && at[j + 1] - at[j] <= 1.5) j++;
+    ready = Math.max(ready, ramp(b, at[i] - 0.8, at[i] - 0.35) * (1 - ramp(b, at[j] + 0.2, at[j] + 0.65)));
+    j++;
+  }
+  if (ready <= 0) return;
+  // Shut over the 0.3 beats before a clap, open over the 0.3 after it.
+  const shut = Math.max(...at.map((c) => (b <= c ? ramp(b, c - 0.32, c) : 1 - ramp(b, c + 0.04, c + 0.35))));
+  const age = Math.min(...at.map((c) => (b >= c ? b - c : Infinity)));
+  for (const d of dancers()) {
+    const B = d.pose, sO = d.sO, gap = 0.6 + 4 * (1 - shut);
+    const hand = (side) => B.Lw(B.nf + 4, B.ns + side * gap, B.nz + 1);
+    B.aim = { O: mix(B.aim.O, hand(sO), ready), I: mix(B.aim.I, hand(-sO), ready) };
+    for (const a of [B.around, B.pole]) for (const n in a ?? {}) a[n].w *= 1 - ready; // elbows down at the sides
+    if (age < 0.22) sparks.push([hand(0), age]);
+  }
+}
+
 // An arm around a partner (B.around) bends its elbow out past the partner's
 // side, so it reaches round them instead of through them. B.pole points an
 // elbow some other way, such as out and up for a hand behind the neck.
@@ -1023,6 +1076,7 @@ function onBeat(k) {
     if (c === 0 || c === 4 || (mine && [1, 2, 5, 6].includes(c))) puff(c === 0 || c === 2 || c === 5 ? d.pose.ankleO : d.pose.ankleI, mine ? 4 : 2);
   }
   if (fig.whoosh?.includes(c)) music.sfx('whoosh');
+  if (fig.claps?.includes(c)) music.sfx('clap');
   const done = callAt(m - 1);
   if (c === 0 && done && done.bar === MOVES[done.id].bars.length - 1) {
     music.sfx('perfect');
@@ -1078,6 +1132,7 @@ function poseAll(b, dt) {
   for (const d of dancers()) d.pose = body(d, b);
   hands(b);
   crossPrep(b);
+  clapHands(b);
   for (const d of dancers()) { reach(d.pose); spring(d, d.pose, dt); }
 }
 
@@ -1151,9 +1206,9 @@ function render(b, dt) {
   shake *= Math.pow(0.001, dt);
   ctx.putImageData(img, sh, 0);
 
-  // Palms meet on 5: a little spark between every couple.
-  if (t >= 4 && t < 4.22) for (const palm of palms) {
-    const p = proj(palm), r = t < 4.08 ? 2 : 1;
+  // Palms meet on 5: a little spark between every couple. Claps spark too.
+  for (const [palm, age] of [...(t >= 4 && t < 4.22 ? palms.map((p) => [p, t - 4]) : []), ...sparks]) {
+    const p = proj(palm), r = age < 0.08 ? 2 : 1;
     ctx.fillStyle = '#fff8d0';
     ctx.fillRect(Math.round(p.x) - r, Math.round(p.y), r * 2 + 1, 1);
     ctx.fillRect(Math.round(p.x), Math.round(p.y) - r, 1, r * 2 + 1);
@@ -1186,7 +1241,8 @@ function ellipse(out, cx, cy, rx, ry, color) {
 function hud(b, t, cnt) {
   const me = player(), B = me.pose, m = Math.floor(b / 8), now = callAt(m), next = timeline.get(m + 1);
   drawText(ctx, 'RUEDA', 8, 6, GOLD, 2, OUTLINE, { shadow: OUTLINE });
-  drawText(ctx, now ? MOVES[now.id].name : GUAPEA.name, 9, 24, now ? GOLD[2] : CREAM, 1, OUTLINE);
+  // The big name over the circle on a move's 1 says it instead.
+  if (!(now?.bar === 0 && t < 1.2)) drawText(ctx, now ? MOVES[now.id].name : GUAPEA.name, 9, 24, now ? GOLD[2] : CREAM, 1, OUTLINE);
 
   // Marker over your head.
   const hp = proj(v3(B.head.x, B.head.y, B.head.z + (me.lead ? 13 : 9)));
@@ -1208,7 +1264,9 @@ function hud(b, t, cnt) {
   // the middle of the circle.
   if (now?.bar === 0 && t < 1.2) {
     // A long name goes on two lines so it clears the corners of the HUD.
-    const text = `¡${MOVES[now.id].name}!`, cut = text.lastIndexOf(' ');
+    // Split at the space that leaves the shorter longest line.
+    const text = `¡${MOVES[now.id].name}!`, cuts = [...text.matchAll(/ /g)].map((c) => c.index);
+    const longest = (cut) => Math.max(cut, text.length - cut - 1), cut = cuts.reduce((a, c) => (longest(c) < longest(a) ? c : a), cuts[0]);
     const lines = textWidth(text, 4) > W - 140 && cut > 0 ? [text.slice(0, cut), text.slice(cut + 1)] : [text];
     const s = t < 0.08 && lines.length === 1 ? 5 : 4;
     if (t < 0.6 || Math.floor(b * 6) % 2 === 0) lines.forEach((line, i) => centerText(ctx, line, 12 - (s - 4) * 2 + i * (7 * s + 4), GOLD, s, OUTLINE, { shadow: OUTLINE }));
@@ -1249,13 +1307,13 @@ function title(b) {
 
 // ------------------------------------------------------------ moves library
 const lib = document.getElementById('moves');
-let libKey = '';
+let libKey = '', libMove = '';
 function buildLibrary() {
   const list = lib.querySelector('ol');
   list.innerHTML = '';
   Object.values(MOVES).forEach((mv, i) => {
     const li = document.createElement('li');
-    li.innerHTML = `<button type="button" data-move="${mv.id}"><kbd>${i + 1}</kbd><b>${mv.name}</b><i></i><small>${mv.blurb}</small></button>`;
+    li.innerHTML = `<button type="button" data-move="${mv.id}"><kbd>${(i + 1) % 10}</kbd><b>${mv.name}</b><i></i><small>${mv.blurb}</small></button>`;
     li.querySelector('button').addEventListener('click', (e) => { e.currentTarget.blur(); select(mv.id); });
     list.appendChild(li);
   });
@@ -1270,6 +1328,8 @@ function syncLibrary(b) {
   const m = Math.floor(b / 8), now = callAt(m)?.id, next = timeline.get(m + 1), key = `${state.move}|${now}|${next}`;
   if (key === libKey) return;
   libKey = key;
+  // A move picked with a key may be below the fold of the list.
+  if (state.move !== libMove) lib.querySelector(`button[data-move="${(libMove = state.move)}"]`)?.scrollIntoView({ block: 'nearest' });
   for (const btn of lib.querySelectorAll('button[data-move]')) {
     const id = btn.dataset.move;
     btn.classList.toggle('on', id === state.move);
@@ -1286,7 +1346,7 @@ addEventListener('keydown', (e) => {
   else if (k === 'ArrowLeft' || k === 'KeyA') setRole('lead');
   else if (k === 'ArrowRight' || k === 'KeyD') setRole('follow');
   else if (k === 'ArrowUp' || k === 'ArrowDown') { e.preventDefault(); select(ids[mod(ids.indexOf(state.move) + (k === 'ArrowUp' ? -1 : 1), ids.length)]); }
-  else if (/^Digit[1-9]$/.test(k) && ids[+k.slice(5) - 1]) select(ids[+k.slice(5) - 1]);
+  else if (/^Digit[0-9]$/.test(k) && ids[(+k.slice(5) + 9) % 10]) select(ids[(+k.slice(5) + 9) % 10]); // 0 is the tenth
   else if (k === 'KeyT') toggleTune();
   else if (k === 'KeyM') {
     state.muted = !state.muted;

@@ -215,6 +215,13 @@ export class ChipMusic extends Music {
       case 'complete': arp([72, 76, 79, 84, 79, 84, 88, 91, 96], 0.06, 0.07, 0.13); break;
       case 'ready': arp([72, 79, 84, 79, 84, 88], 0.11, 0.1, 0.13); break;
       case 'gameover': arp([79, 76, 72, 67, 64, 60], 0.16, 0.15, 0.13); break;
+      case 'clap': {
+        // A hand clap: three quick bursts of noise and a short tail.
+        const buf = this.flavor === 'nes' ? this.noiseLong : this.noise;
+        for (const dt of [0, 0.011, 0.022]) this.noiseHit(t + dt, buf, 0.012, 0.16, 1, ['bandpass', 1300, 1.2]);
+        this.noiseHit(t + 0.03, buf, 0.13, 0.14, 1, ['bandpass', 1100, 1]);
+        break;
+      }
       case 'whoosh':
         if (this.flavor === 'namco') this.sweep(t, 200, 1600, 0.2, 0.06, 'wsgLead');
         else this.noiseHit(t, this.flavor === 'nes' ? this.noiseLong : this.noise, 0.25, 0.08, 1, ['bandpass', 1800, 2]);
