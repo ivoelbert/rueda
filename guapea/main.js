@@ -261,6 +261,36 @@ const SETENTA_DILE = {
   follow: { ...DILE_QUE_NO.follow, sway: [[0, 1]], root: [[0, 0.44, -1.8, -180], ...DILE_QUE_NO.follow.root.filter(([b]) => b >= 1).map(([b, a, o, r]) => [b, a, o, r - 360])] },
 };
 
+// El Uno: both hands held like a handshake (his right in her right, his left
+// in her left) and he dances behind her, both facing the center, the two of
+// them swapping sides like a windshield wiper (behind; right: how far he is
+// on her right, [from, to, from beat, by beat]). On his side her arm is
+// wrapped behind her back.
+//
+// First bar: on 1 his right hand takes her right (take) and she walks past
+// him on the inside, right shoulder to right shoulder; on 2-3 she turns a
+// quarter to her left to face the center and he steps in behind her on her
+// left, turning a quarter to his right, her right arm wrapping behind her
+// back, and his left takes her left. On 5-6-7 they swap: she slides to her
+// left in front and he to his right behind her, so her right arm comes out
+// and her left wraps behind her back.
+const UNO = {
+  shift: 0, whoosh: [1], behind: true, take: true, right: [0, 1, 4.5, 7],
+  lead: { ...ENCHUFLA_STEPS, root: [[-2, 0, 0, 0], [0, 0, 0, 0], [1, -0.07, 1.8, -15], [2, -0.19, 3.4, -50], [3, -0.27, 3, -82], [4, -0.298, 3, -90], [5, -0.27, 3.3, -95], [6, -0.21, 4.4, -98], [7, -0.155, 3.3, -93], [8, -0.138, 3, -90]] },
+  follow: { ...ENCHUFLA_STEPS, sway: [[0, 1], [1.6, 1], [2.6, -1]], root: [[-2, 0, 0, 0], [0, 0, 0, 0], [1, 0.08, -2.1, 15], [2, 0.2, -3.5, 55], [3, 0.27, -3, 85], [4, 0.298, -3, 90], [5, 0.27, -3.3, 95], [6, 0.21, -4.2, 98], [7, 0.155, -3.3, 93], [8, 0.138, -3, 90]] },
+};
+// Second bar: on 1-2-3 they swap back, her right arm wrapping behind her back
+// again. On 5 his right hand brings it out by her right side and up over her
+// head (wrap), and on 5-6-7 he steps up beside her on her left, both turning
+// toward each other, while her left hand goes up over his head (hats): the
+// coronación on 7, as in the sombrero, which they let go of on 8 into the
+// dile que no's hold.
+const UNO_CORONACION = {
+  shift: 0, whoosh: [4], behind: true, right: [1, 0, 0.3, 2.8], wrap: [3.8, 4.6, 5.5, 6.3], hats: [5.3, 6.1, 6.9, 7, 7.8],
+  lead: { ...ENCHUFLA_STEPS, root: [[0, -0.138, 3, -90], [1, -0.17, 3.9, -85], [2, -0.235, 4.2, -82], [3, -0.285, 3, -87], [4, -0.298, 3, -90], [5, -0.305, 2.2, -100], [6, -0.315, 0.6, -120], [7, -0.32, -0.6, -131], [8, -0.32, -0.8, -133]] },
+  follow: { ...ENCHUFLA_STEPS, sway: [[0, -1]], root: [[0, 0.138, -3, 90], [1, 0.17, -3.8, 85], [2, 0.235, -4.1, 82], [3, 0.285, -3, 87], [4, 0.298, -3, 90], [5, 0.32, -3, 100], [6, 0.355, -3, 120], [7, 0.375, -3, 133], [8, 0.38, -3, 136]] },
+};
+
 // The moves library. Each move starts on a 1 from the guapea, dances its
 // bars (one figure per 8 counts) and ends in the guapea; the hands are
 // scripted in hands().
@@ -298,6 +328,10 @@ const MOVES = {
   setenta: {
     id: 'setenta', name: 'SETENTA', say: '¡Setenta!', bars: [SETENTA_LOCK, SETENTA_ENCHUFLA, SETENTA_TURNS, SETENTA_DILE, DAME],
     blurb: 'Both hands: an exhíbela that wraps her left arm behind her back, an enchufla without letting go that unwinds it, then his enchufla and hers, round like gears. A dile que no hands her on, then a dame. Everyone has a new partner.',
+  },
+  uno: {
+    id: 'uno', name: 'UNO', say: '¡Uno!', bars: [UNO, UNO_CORONACION, DILE_QUE_NO, DAME],
+    blurb: 'Hands like a handshake, he steps in behind her and they swap sides behind each other; on 5 her arm goes over her head into the coronación. A dile que no hands her on, then a dame. Everyone has a new partner.',
   },
 };
 
@@ -570,14 +604,36 @@ function straight(L, F) {
   const at = (a, c) => { const m = mix(a, c, 0.5); return reachable(v3(m.x, m.y, 13 - (L.dp + F.dp) / 2), a, c); };
   return { O: at(L.shO, F.shO), I: at(L.shI, F.shI) };
 }
-// The setenta's lock: her left hand's way round her at the waist, from in
-// front of her on her left (u = 0), by her left side, to behind her back
-// (u = 1). Points are [forward, to her left, up from the pelvis].
-const LOCK_FROM = [6, 4.2, 0.5], LOCK_TO = [-1.6, 0, 3.5];
-function lockPath(F, u) {
-  const [f0, s0, z0] = LOCK_FROM, [f1, s1, z1] = LOCK_TO;
-  const a0 = Math.atan2(s0, f0), a1 = Math.atan2(s1, f1), r = lerp(Math.hypot(f0, s0), Math.hypot(f1, s1), u), a = lerp(a0, a1, u);
+// A hand's way round her at the waist, from one spot to another, each
+// [angle, distance, height]: the angle in degrees round her pelvis (0 = in
+// front of her, + = to her left), the height up from the pelvis.
+function roundHer(F, [a0, r0, z0], [a1, r1, z1], u) {
+  const a = lerp(a0, a1, u) * DEG, r = lerp(r0, r1, u);
   return F.Lw(F.pf + r * Math.cos(a), F.ps + r * Math.sin(a), F.pz + lerp(z0, z1, u));
+}
+// The setenta's lock: her left hand from in front of her on her left (u = 0),
+// by her left side, to behind her back (u = 1).
+const lockPath = (F, u) => roundHer(F, [35, 7.32, 0.5], [180, 1.6, 3.5], u);
+// El Uno's grips: her hand out at her side, held by his hand on that side, or
+// behind her back, held there by his hand from the other side. Before it,
+// her right hand starts in front of her (UNO_FRONT).
+const UNO_SIDE = { R: [260, 6, 3.5], L: [100, 6, 3.5] }, UNO_BACK = { R: [160, 2.2, 3.5], L: [200, 2.2, 3.5] }, UNO_FRONT = [330, 7, 2];
+// The coronación: each wears the other's arm as a hat, his right over her
+// head (onR, the right hands' grip) and her left over his (onL), their own
+// outside arms bent with the hand behind the neck. On 8 they let go (drop):
+// the arms round each other slide down to the dile que no's hold, and the
+// outside hands come down free.
+function coronacion(L, F, onR, onL, drop) {
+  if (onR <= 0 && onL <= 0) return;
+  if (drop > 0) {
+    L.aim = { O: mix(L.aim.O, rest(L, L.d.sO), drop), I: mix(L.aim.I, herBack(F), drop) };
+    F.aim = { O: mix(F.aim.O, rest(F, F.d.sO), drop), I: mix(F.aim.I, hisBack(L), drop) };
+  }
+  const behind = (W) => v3(-W.f.x * 0.6, -W.f.y * 0.6, 1), bent = (B) => v3(B.l.x * B.d.sO * 0.7, B.l.y * B.d.sO * 0.7, 1);
+  L.around = { I: { on: F, w: onR, side: mix(behind(F), v3(F.l.x, F.l.y, -0.3), drop) } };
+  F.around = { I: { on: L, w: onL, side: mix(behind(L), v3(-L.l.x, -L.l.y, 0.2), drop) } };
+  L.pole = { O: { w: onL * (1 - drop), side: bent(L) } };
+  F.pole = { O: { w: onR * (1 - drop), side: bent(F) } };
 }
 // Each takes the crossed grips, and the top pair's forearms are drawn over
 // both of them (render).
@@ -608,19 +664,46 @@ function hands(b) {
       const lift = 2 * up * (1 - on); // her shoulders lift with the arms
       F.shO = add(F.shO, v3(0, 0, lift)); F.shI = add(F.shI, v3(0, 0, lift));
       holdCrossed(L, F, crossed(L, F, top, up, apart, on), on < 0.5 && top);
-      if (on > 0) {
-        // On 8 they let go (drop): the arms round each other slide down to
-        // the dile que no's hold, and the outside hands come down free.
-        if (drop > 0) {
-          aim(L, mix(L.aim.O, rest(L, L.d.sO), drop), mix(L.aim.I, herBack(F), drop));
-          aim(F, mix(F.aim.O, rest(F, F.d.sO), drop), mix(F.aim.I, hisBack(L), drop));
-        }
-        const behind = (W) => v3(-W.f.x * 0.6, -W.f.y * 0.6, 1), bent = (B) => v3(B.l.x * B.d.sO * 0.7, B.l.y * B.d.sO * 0.7, 1);
-        L.around = { I: { on: F, w: on, side: mix(behind(F), v3(F.l.x, F.l.y, -0.3), drop) } };
-        F.around = { I: { on: L, w: on, side: mix(behind(L), v3(-L.l.x, -L.l.y, 0.2), drop) } };
-        L.pole = { O: { w: on * (1 - drop), side: bent(L) } };
-        F.pole = { O: { w: on * (1 - drop), side: bent(F) } };
+      coronacion(L, F, on, on, drop);
+    }
+    return;
+  }
+  if (fig.behind) {
+    // El Uno: both hands held like a handshake while he dances behind her.
+    // right is how far he is on her right: her arm on his side is wrapped
+    // behind her back and the other is out at her side, and they swap as
+    // he passes behind her. In the first bar his right takes her right from
+    // the guapea (take), she turns past him, her right arm wrapping behind
+    // her back, and his left takes her left. In the second, on 5 his right
+    // brings her right arm out by her side and up over her head (wrap: out,
+    // over her head by, on by), and her left goes up over his head (hats:
+    // over his head from, by, on by, let go from, by): the coronación.
+    const right = lerp(fig.right[0], fig.right[1], ramp(t, fig.right[2], fig.right[3]));
+    const w = fig.wrap, out = w ? ramp(t, w[0], w[1]) : 0, over = w ? ramp(t, w[1] - 0.3, w[2]) : 0, onR = w ? ramp(t, w[2], w[3]) : 0;
+    const h = fig.hats, raise = h ? ramp(t, h[0] - 0.5, h[0] + 0.3) : 0, apart = h ? ramp(t, h[0], h[1]) : 0, onL = h ? ramp(t, h[1], h[2]) : 0, drop = h ? ramp(t, h[3], h[4]) : 0;
+    for (let i = 0; i < n; i++) {
+      const L = leads[i].pose, F = follows[mod(i + s, n)].pose;
+      F.shO = add(F.shO, v3(0, 0, 2 * over * (1 - onR))); // her shoulders lift with the arms
+      F.shI = add(F.shI, v3(0, 0, 2 * raise * (1 - onL)));
+      let RR = roundHer(F, UNO_BACK.R, UNO_SIDE.R, Math.max(right, out)), LL = roundHer(F, UNO_SIDE.L, UNO_BACK.L, right);
+      if (fig.take && t < 4) RR = mix(guapeaGrip(L, F, t), roundHer(F, UNO_FRONT, UNO_BACK.R, ramp(t, 0.8, 2.8)), ramp(t, 0, 1));
+      if (w) {
+        // Up past her right shoulder in an arc, then down behind her neck.
+        const beside = F.Lw(F.nf + 0.5, F.ns + F.d.sO * 8, F.head.z + 3), top = v3(F.head.x, F.head.y, F.head.z + 5);
+        RR = mix(mix(mix(RR, beside, over), mix(beside, top, over), over), hatOn(F), onR);
       }
+      if (h) LL = mix(mix(mix(LL, v3(LL.x, LL.y, L.head.z + 4), raise), v3(L.head.x, L.head.y, L.head.z + 5), apart), hatOn(L), onL);
+      // While his right takes her right from his left, the grip stays within his left's reach.
+      RR = reachable(RR, fig.take ? mix(L.shO, L.shI, ramp(t, 0, 0.45)) : L.shI, F.shO); LL = reachable(LL, L.shO, F.shI);
+      let hisL = LL, hisR = RR, herL = LL;
+      if (fig.take) {
+        hisR = mix(styled(L, t), RR, ramp(t, 0, 0.45));
+        hisL = mix(mix(guapeaGrip(L, F, t), rest(L, L.d.sO), ramp(t, 0.35, 1)), LL, ramp(t, 1.8, 2.8));
+        herL = mix(styled(F, t), LL, ramp(t, 1.8, 2.8));
+      }
+      aim(L, hisL, hisR);
+      aim(F, RR, herL);
+      coronacion(L, F, onR, onL, drop);
     }
     return;
   }
