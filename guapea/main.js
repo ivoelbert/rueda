@@ -474,8 +474,7 @@ const ARRIBA_DILE = {
 // to the girl ahead, whose partner has gone on under her arm too, and by the
 // 8 they are in the closed hold, walking on arriba. So he covers two places
 // in the bar (TARRITO_ALONG, in places at each count) while the girls walk
-// one and move on one (shift). To cover the ground he takes long strides, a
-// little lower (duck, px).
+// one and move on one (shift). To cover the ground he takes long strides.
 const TARRITO_ALONG = [0, 0.2, 0.5, 0.78, 1.06, 1.36, 1.64, 1.86, 2];
 const TARRITO_OUT = [0, -2.6, -7.4, -8.3, -6, -3.4, -1.6, -0.4, 0];
 const TARRITO_SWAY = [[0, 1], [1.2, 0.3], [3.6, 0.3], [4.6, 1]]; // the hips quieter as they pass
@@ -491,23 +490,24 @@ const tarritoRoot = (along, out) => walk(true).map(([b, a, o, ...r]) => [b, a - 
 const TARRITO = {
   ...ARRIBA, shift: 1, travel: 2, whoosh: [1], tarrito: true, arch: [0, 0.8, 3, 3.9], take: [5, 6.2, 6, 7.2], pump: [[0, 1], [3.6, 0.4], [5, 1], [6, 0]],
   lead: {
-    ...ARRIBA.lead, root: tarritoRoot(TARRITO_ALONG, TARRITO_OUT), sway: TARRITO_SWAY, duck: [[0.6, 2], [2, 3], [4, 3], [5.6, 2], [6.8, 0]],
+    ...ARRIBA.lead, root: tarritoRoot(TARRITO_ALONG, TARRITO_OUT), sway: TARRITO_SWAY,
     ...hurry([0.2, 0.6, 0.1, -0.4, -0.2, 0.2]),
   },
   // She leans a little out of his way as he passes.
   follow: { ...ARRIBA.follow, sway: TARRITO_SWAY, root: walk(false).map(([b, along, out, ...r]) => [b, along, out + [0, 0.4, 1, 1.2, 0.6, 0, 0, 0, 0][b], ...r]) },
 };
 // The tarrito hasta la tuya: the tarrito's arch, but he walks on round the
-// inside of the circle (INSIDE px) past every girl, two a bar, until he comes
-// out to his own girl in the last bar and takes her as in the tarrito; then
-// they walk on arriba. tuyaBars(n): a bar for every two couples (rounded up),
-// the first with the arch, the last with the new hold, and his hands free in
-// between. Past the girls he goes at an even pace (rel: how many places he
-// has gained on them, A beats to get going and C to come up to her), and
-// each bar's shift is the girls he has passed by its end, rounded.
+// inside of the circle (INSIDE px) past every girl, at the tarrito's pace (a
+// bar for every 1.6 couples or so), until he comes out to his own girl in the
+// last bar and takes her as in the tarrito; then they walk on arriba.
+// tuyaBars(n): those bars, the first with the arch, the last with the new
+// hold, and his hands free in between. Past the girls he goes at an even
+// pace (rel: how many places he has gained on them, A beats to get going and
+// C to come up to her), and each bar's shift is the girls he has passed by
+// its end, rounded.
 const INSIDE = -12;
 function tuyaBars(n) {
-  const B = Math.ceil(n / 2), T = 8 * B, A = 2.5, C = 4, w = n / (T - (A + C) / 2);
+  const B = Math.ceil(n * 0.6), T = 8 * B, A = 2.5, C = 4, w = n / (T - (A + C) / 2);
   const I = (x) => x ** 3 - x ** 4 / 2; // smooth's integral
   const rel = (u) => w * (u < A ? A * I(u / A) : u > T - C ? T - (A + C) / 2 - C * I((T - u) / C) : u - A / 2);
   const counts = [0, 1, 2, 3, 4, 5, 6, 7, 8], passed = (j) => Math.round(rel(8 * j));
@@ -518,7 +518,7 @@ function tuyaBars(n) {
     return {
       ...TARRITO, shift, travel: shift + 1, whoosh: first ? [1] : [], arch: first ? TARRITO.arch : null, take: last ? TARRITO.take : null,
       pump: [...(first ? [[0, 1], [3.6, 0]] : [[0, 0]]), ...(last ? [[5, 1], [6, 0]] : [])],
-      lead: { ...TARRITO.lead, root: tarritoRoot(along, out), duck: last ? TARRITO.lead.duck : first ? [[0.6, 2]] : [[0, 2]], ...hurry([0.2, first ? 0.5 : 0.6, 0.1, -0.4, -0.2, last ? 0.2 : 0.5]) },
+      lead: { ...TARRITO.lead, root: tarritoRoot(along, out), ...hurry([0.2, first ? 0.5 : 0.6, 0.1, -0.4, -0.2, last ? 0.2 : 0.5]) },
       // Only her own partner passes her at the tarrito's beats.
       follow: first ? TARRITO.follow : { ...TARRITO.follow, root: walk(false) },
     };
@@ -594,7 +594,7 @@ const MOVES = {
   },
   tuya: {
     id: 'tuya', name: 'TARRITO HASTA LA TUYA', say: '¡Tarrito hasta la tuya!', bars: [], from: 'arriba', loop: ARRIBA, to: 'arriba',
-    blurb: 'A tarrito, but he walks on round the inside of the circle, past every girl, two a bar, until he is back with his own. Then they walk on arriba.',
+    blurb: 'A tarrito, but he walks on round the inside of the circle, past every girl, until he is back with his own. Then they walk on arriba.',
   },
 };
 
@@ -650,7 +650,7 @@ function stateAt(m) {
 // so each figure flows into the next.
 function keysAround(d, name, b) {
   const m = Math.floor(b / 8), out = [];
-  for (let mm = m - 1; mm <= m + 1; mm++) for (const k of figureAt(mm)[d.role][name] ?? (name === 'hips' ? HIPS : name === 'duck' ? [[0, 0]] : [[0, 1]])) out.push([k[0] + mm * 8, ...k.slice(1)]);
+  for (let mm = m - 1; mm <= m + 1; mm++) for (const k of figureAt(mm)[d.role][name] ?? (name === 'hips' ? HIPS : [[0, 1]])) out.push([k[0] + mm * 8, ...k.slice(1)]);
   return out;
 }
 function activeAbs(keys, b, pre, post) {
@@ -832,7 +832,7 @@ function body(d, b) {
   const ang = trk('angle', 0.4, 0.15, smooth) * -sO * 1.3;
   const ps = trk('hips', 0.42, 0.3, backOut) * sO * 2.2 * P.hips * d.hips * trk('sway', 0.4, 0.4, smooth) + ang;
   const amp = 1.8 * P.bounce * d.bounce, dp = dip(t) * amp, dpLag = dip(t - 0.09) * amp;
-  const pz = d.hipZ - dp - trk('duck', 0.5, 0.5, smooth); // duck: lower, for longer strides
+  const pz = d.hipZ - dp;
   const pelvis = Lw(pf, ps, pz);
   // A foot lands where the body is about to be and stays there until it
   // lifts again, so traveling steps don't skate.
@@ -905,6 +905,15 @@ function closedGrip(L, F, u) {
 }
 // Free hands: bent at the elbow in front of the chest, swinging against the step.
 const rest = (B, side) => B.Lw(B.nf + 3.4 - B.pf * 0.35, B.ns + side * (B.d.shW - 1.2), B.nz - (B.d.lead ? 5.2 : 4.4));
+// A free hand while he walks on his own (the tarritos): it swings forward and
+// a little up as the foot on the other side goes forward, as in the mambo,
+// and a little back as it goes back.
+function swinging(B, side) {
+  const ahead = (n) => (B['ankle' + n].x - B.pelvis.x) * B.f.x + (B['ankle' + n].y - B.pelvis.y) * B.f.y;
+  const other = side === B.d.sO ? 'I' : 'O', u = clamp((ahead(other) - ahead(other === 'I' ? 'O' : 'I')) / 12, -1, 1);
+  const fwd = u > 0 ? 4 * u : 1.5 * u;
+  return add(rest(B, side), v3(B.f.x * fwd, B.f.y * fwd, 2 * Math.max(0, u)));
+}
 // The inside free hand, which also opens out on 1-2-3.
 function styled(B, t) {
   const d = B.d, sO = d.sO, style = clamp(P.style * d.style, 0, 2), p = rest(B, -sO);
@@ -1127,7 +1136,7 @@ function hands(b) {
       // go of it on 4 (letGo) (arch: those windows). His left takes the right
       // hand of the girl he comes up to (the bar's shift on) on 6 (take), and
       // by the 8 they are in the closed hold (on) (take: those windows).
-      // Without them the hands are free.
+      // Without them his hands are free and swing as he walks.
       const off = fig.arch ? ramp(t, fig.arch[0], fig.arch[1]) : 1, letGo = fig.arch ? ramp(t, fig.arch[2], fig.arch[3]) : 1;
       const take = fig.take ? ramp(t, fig.take[0], fig.take[1]) : 0, on = fig.take ? ramp(t, fig.take[2], fig.take[3]) : 0;
       // In the arch they stretch up, the shoulder on that side going up too,
@@ -1140,7 +1149,7 @@ function hands(b) {
         const L = leads[i].pose, Fo = follows[mod(i + s, n)].pose, Fn = follows[mod(i + s + fig.shift, n)].pose, mid = mix(L.shO, Fo.shO, 0.5);
         arch[i] = mix(closedGrip(L, Fo, pump), reachable(v3(mid.x, mid.y, mid.z + REACH), L.shO, Fo.shO), ramp(t, 0, 1.2));
         neu[i] = closedGrip(L, Fn, pump);
-        aim(L, mix(mix(arch[i], rest(L, L.d.sO), letGo), neu[i], take), mix(mix(herBack(Fo), rest(L, -L.d.sO), off), herBack(Fn), on));
+        aim(L, mix(mix(arch[i], swinging(L, L.d.sO), letGo), neu[i], take), mix(mix(herBack(Fo), swinging(L, -L.d.sO), off), herBack(Fn), on));
         L.around = { I: on > 0 ? { on: Fn, w: on, side: v3(Fn.l.x, Fn.l.y, -0.3) } : { on: Fo, w: 1 - off, side: v3(Fo.l.x, Fo.l.y, -0.3) } };
       }
       for (let j = 0; j < n; j++) {
