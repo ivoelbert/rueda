@@ -456,6 +456,29 @@ const ARRIBA_DILE = {
   lead: { ...SETENTA_DILE.lead, O: [[0, -0.5, 0, 2.6], ...SETENTA_DILE.lead.O.slice(1)], root: [walk(true)[0], [1, -0.32, -1.6, -158], [2, -0.29, -2.3, -136], [3, -0.26, -2.5, -116], ...SETENTA_DILE.lead.root.filter(([b]) => b >= 4)] },
   follow: { ...SETENTA_DILE.follow, O: [[0, 0.4, 0, 2.6], ...SETENTA_DILE.follow.O.slice(1)], root: [walk(false)[0], [1, 0.37, -2.6, -186], ...SETENTA_DILE.follow.root.filter(([b]) => b >= 2)] },
 };
+// The tarrito, out of arriba: on 1 they let go of each other's backs and the
+// joined hands go up into an arch (tarrito: the hands' windows, see hands()).
+// He hurries on under it, past her on the inside of the circle, right
+// shoulder by right shoulder (TARRITO_OUT: px out from the center, added to
+// the hold's), while she walks on backward. They let go on 4 and he walks on
+// to the girl ahead, whose partner has gone on under her arm too, and by the
+// 8 they are in the closed hold, walking on arriba. So he covers two places
+// in the bar (TARRITO_ALONG, in places at each count) while the girls walk
+// one and move on one (shift). To cover the ground he steps on every count,
+// a little lower (duck, px).
+const TARRITO_ALONG = [0, 0.19, 0.47, 0.77, 1.07, 1.37, 1.64, 1.86, 2];
+const TARRITO_OUT = [0, -2.6, -7.4, -8.3, -6, -3.4, -1.6, -0.4, 0];
+const TARRITO_SWAY = [[0, 1], [1.2, 0.3], [3.6, 0.3], [4.6, 1]]; // the hips quieter as they pass
+const TARRITO = {
+  ...ARRIBA, shift: 1, travel: 2, whoosh: [1], tarrito: [0, 0.8, 3, 3.9, 5, 6.2, 6, 7.2], pump: [[0, 1], [3.6, 0.4], [5, 1], [6, 0]],
+  lead: {
+    ...ARRIBA.lead, root: walk(true).map(([b, along, out, ...r]) => [b, along - b / 8 + TARRITO_ALONG[b], out + TARRITO_OUT[b], ...r]),
+    hips: [0, 1, 2, 3, 4, 5, 6, 7].map((c) => [c, c % 2 ? -1 : 1]), sway: TARRITO_SWAY, duck: [[0.6, 2], [5.6, 2], [6.8, 0]],
+    O: [[0, 0.3, 0, 2.6], [2, 0, 0, 2.6], [4, 0, 0, 2.6], [6, 0.1, 0, 2.6]], I: [[1, -0.1, 0, 2.6], [3, 0, 0, 2.6], [5, 0, 0, 2.6], [7, 0.3, 0, 2.6]],
+  },
+  // She leans a little out of his way as he passes.
+  follow: { ...ARRIBA.follow, sway: TARRITO_SWAY, root: walk(false).map(([b, along, out, ...r]) => [b, along, out + [0, 0.4, 1, 1.2, 0.6, 0, 0, 0, 0][b], ...r]) },
+};
 const MOVES = {
   dame: {
     id: 'dame', name: 'DAME', say: '¡Dame!', bars: [DAME],
@@ -520,6 +543,10 @@ const MOVES = {
     id: 'dilequeno', name: 'DILE QUE NO', say: '¡Dile que no!', bars: [ARRIBA_DILE], from: 'arriba',
     blurb: 'Out of the closed hold: she crosses in front of him and they are back in the guapea, with the same partner, where they walked to.',
   },
+  tarrito: {
+    id: 'tarrito', name: 'TARRITO', say: '¡Tarrito!', bars: [TARRITO], from: 'arriba', loop: ARRIBA, to: 'arriba',
+    blurb: 'The joined hands go up into an arch and he walks on under her arm while she keeps walking. By the 8 he has the girl ahead in the closed hold and they walk on arriba. Everyone has a new partner.',
+  },
 };
 
 // The calls: measure number -> move id; the move's bars follow from that
@@ -574,7 +601,7 @@ function stateAt(m) {
 // so each figure flows into the next.
 function keysAround(d, name, b) {
   const m = Math.floor(b / 8), out = [];
-  for (let mm = m - 1; mm <= m + 1; mm++) for (const k of figureAt(mm)[d.role][name] ?? (name === 'hips' ? HIPS : [[0, 1]])) out.push([k[0] + mm * 8, ...k.slice(1)]);
+  for (let mm = m - 1; mm <= m + 1; mm++) for (const k of figureAt(mm)[d.role][name] ?? (name === 'hips' ? HIPS : name === 'duck' ? [[0, 0]] : [[0, 1]])) out.push([k[0] + mm * 8, ...k.slice(1)]);
   return out;
 }
 function activeAbs(keys, b, pre, post) {
@@ -723,7 +750,7 @@ function body(d, b) {
   const ang = trk('angle', 0.4, 0.15, smooth) * -sO * 1.3;
   const ps = trk('hips', 0.42, 0.3, backOut) * sO * 2.2 * P.hips * d.hips * trk('sway', 0.4, 0.4, smooth) + ang;
   const amp = 1.8 * P.bounce * d.bounce, dp = dip(t) * amp, dpLag = dip(t - 0.09) * amp;
-  const pz = d.hipZ - dp;
+  const pz = d.hipZ - dp - trk('duck', 0.5, 0.5, smooth); // duck: lower, for longer strides
   const pelvis = Lw(pf, ps, pz);
   // A foot lands where the body is about to be and stays there until it
   // lifts again, so traveling steps don't skate.
@@ -1010,6 +1037,33 @@ function hands(b) {
     const hold = fig.closed === true ? 1 : ramp(t, ...fig.closed), keys = [];
     for (let mm = m - 1; mm <= m + 1; mm++) for (const [c, v] of figureAt(mm).pump ?? [[0, 0]]) keys.push([mm * 8 + c, v]);
     const a = activeAbs(keys, b, 0.4, 0.2), pump = lerp(a.prev[1], a.k[1], inOut(a.u));
+    if (fig.tarrito) {
+      // The tarrito: on 1 they let go of each other's backs (off) and the
+      // joined hands go on up into the arch he walks under. They let
+      // go of it on 4 (letGo), his left takes the right hand of the girl
+      // ahead on 6 (take), and by the 8 they are in the closed hold (on).
+      const [o0, o1, g0, g1, k0, k1, h0, h1] = fig.tarrito;
+      const off = ramp(t, o0, o1), letGo = ramp(t, g0, g1), take = ramp(t, k0, k1), on = ramp(t, h0, h1);
+      // In the arch they stretch up, the shoulder on that side going up too,
+      // so the hands are as high above them as they reach, not hidden behind
+      // his head as he goes under.
+      const up = ramp(t, 0, 1.2) * (1 - letGo);
+      for (const d of dancers()) { const B = d.pose; B.shO = add(B.shO, v3(0, 0, 1.4 * pump + 2.5 * up)); B.shI = add(B.shI, v3(0, 0, -0.6 * pump)); }
+      const arch = [], neu = [];
+      for (let i = 0; i < n; i++) {
+        const L = leads[i].pose, Fo = follows[mod(i + s, n)].pose, Fn = follows[mod(i + s + 1, n)].pose, mid = mix(L.shO, Fo.shO, 0.5);
+        arch[i] = mix(closedGrip(L, Fo, pump), reachable(v3(mid.x, mid.y, mid.z + REACH), L.shO, Fo.shO), ramp(t, 0, 1.2));
+        neu[i] = closedGrip(L, Fn, pump);
+        aim(L, mix(mix(arch[i], rest(L, L.d.sO), letGo), neu[i], take), mix(mix(herBack(Fo), rest(L, -L.d.sO), off), herBack(Fn), on));
+        L.around = { I: on > 0 ? { on: Fn, w: on, side: v3(Fn.l.x, Fn.l.y, -0.3) } : { on: Fo, w: 1 - off, side: v3(Fo.l.x, Fo.l.y, -0.3) } };
+      }
+      for (let j = 0; j < n; j++) {
+        const F = follows[j].pose, Lo = leads[mod(j - s, n)].pose, Ln = leads[mod(j - s - 1, n)].pose, over = 5 * Math.sin(Math.PI * (on > 0 ? on : off));
+        aim(F, mix(mix(arch[mod(j - s, n)], rest(F, F.d.sO), letGo), neu[mod(j - s - 1, n)], take), add(mix(mix(hisBack(Lo), rest(F, -F.d.sO), off), hisBack(Ln), on), v3(0, 0, over)));
+        F.around = { I: on > 0 ? { on: Ln, w: on, side: v3(-Ln.l.x, -Ln.l.y, 0.2) } : { on: Lo, w: 1 - off, side: v3(-Lo.l.x, -Lo.l.y, 0.2) } };
+      }
+      return;
+    }
     for (let i = 0; i < n; i++) {
       const L = leads[i].pose, F = follows[mod(i + s, n)].pose;
       for (const B of [L, F]) { B.shO = add(B.shO, v3(0, 0, 1.4 * pump)); B.shI = add(B.shI, v3(0, 0, -0.6 * pump)); }
