@@ -404,41 +404,48 @@ const PELOTA4_TURN = {
 // aiming (root) back to the middle between them. In the hold she is a little
 // to his right (SIDE px, outside the circle).
 const OPEN = DIST / 2 / (DIST + 24), CLOSED = 5 / (DIST + 24), SIDE = 1.2;
-// Steps on 1-2-3 and 5-6-7, his left foot first and her right, each landing
-// f steps on from under the body (ahead of him, behind her), so the body
-// doesn't drag the planted foot along before it lifts.
-const walkSteps = (f) => ({ O: [[0, f, 0, 2.6], [2, f, 0, 2.6], [5, f, 0, 2.6]], I: [[1, f, 0, 2.6], [4, f, 0, 2.6], [6, f, 0, 2.6]] });
+// Steps on 1-2-3 and 5-6-7, his left foot first and her right. The body
+// doesn't stop on the 4 and the 8, so each step lands a little ahead of it
+// (behind her), [a, b, c] steps for the steps on 1, 2, 3 and on 5, 6, 7, the
+// one before the pause furthest, so the planted foot isn't dragged along
+// before it lifts.
+const walkSteps = (dir, [a, b, c]) => ({ O: [[0, dir * a, 0, 2.6], [2, dir * c, 0, 2.6], [5, dir * b, 0, 2.6]], I: [[1, dir * b, 0, 2.6], [4, dir * a, 0, 2.6], [6, dir * c, 0, 2.6]] });
 // The dile que si's half turn: the couple pivots round the middle between
 // them, to his right, [beat, degrees turned, half the distance between them],
 // so he goes round the outside of the circle and she round the inside, and
-// they end swapped, in line, him facing South.
-const PIVOT = [[2, 0, OPEN - 0.01], [3, 8, OPEN - 0.04], [4, 40, 0.165], [5, 105, 0.135], [6, 160, CLOSED + 0.005], [7, 180, CLOSED], [8, 180, CLOSED]];
+// they end swapped, in line, him facing South. From 5 on the couple also
+// sets off along the circle (GO places by the 8), so on the 1 they are
+// already walking at the walk's pace.
+const PIVOT = [[2, 0, OPEN - 0.01], [3, 8, OPEN - 0.04], [4, 40, 0.165], [5, 105, 0.135], [6, 160, CLOSED + 0.005], [7, 176, CLOSED], [8, 180, CLOSED]];
+const GO = 0.1875, go = (b) => (b < 5 ? 0 : (GO * (b - 5) ** 2) / 9);
 const pivot = (lead) => PIVOT.map(([b, a, r]) => {
   const off = OPEN - r * Math.cos(a * DEG), side = SIDE * smooth(clamp((a - 90) / 90, 0, 1)) * (lead ? -1 : 1);
-  return [b, lead ? -off : off, (lead ? 1 : -1) * r * (DIST + 24) * Math.sin(a * DEG) + side, -a, lead ? off : -off];
+  return [b, (lead ? -off : off) + go(b), (lead ? 1 : -1) * r * (DIST + 24) * Math.sin(a * DEG) + side, -a, lead ? off : -off];
 });
 // On 1-2-3 a short extension: they lean away from each other on 1, the
 // joined hands down and out, and come back on 2-3. On 5-6-7 they turn half
 // round together into the closed hold (closed: the window it comes on in):
 // his right hand on her back, her left on his shoulder, the joined hands at
 // head height.
-const DILE_QUE_SI_STEPS = { pelvis: [[0, -1], [1, -0.35], [2, 0], [4, 0.2], [6, 0]], angle: [[0, 0]], O: [[0, -1, 0, 2.6], [2, 0, 0, 2.2], [5, 0, 0, 2.6]], I: [[1, 0, 0, 1.6], [4, 0, 0, 2.6], [6, 0, 0, 2.4]] };
+// The steps on 6 and 7 land a little on in the way they set off (dir: ahead
+// of him, behind her).
+const dileQueSiSteps = (dir) => ({ pelvis: [[0, -1], [1, -0.35], [2, 0], [4, 0.2], [6, 0]], angle: [[0, 0]], O: [[0, -1, 0, 2.6], [2, 0, 0, 2.2], [5, 0.3 * dir, 0, 2.6]], I: [[1, 0, 0, 1.6], [4, 0, 0, 2.6], [6, 0.6 * dir, 0, 2.4]] });
 const DILE_QUE_SI = {
   shift: 0, whoosh: [4], closed: [3.4, 6.4],
-  lead: { ...DILE_QUE_SI_STEPS, root: [[0, 0, 0, 0], [0.7, 0.03, 0, 0], ...pivot(true)] },
-  follow: { ...DILE_QUE_SI_STEPS, root: [[0, 0, 0, 0], [0.7, -0.03, 0, 0], ...pivot(false)] },
+  lead: { ...dileQueSiSteps(1), root: [[0, 0, 0, 0], [0.7, 0.03, 0, 0], ...pivot(true)] },
+  follow: { ...dileQueSiSteps(-1), root: [[0, 0, 0, 0], [0.7, -0.03, 0, 0], ...pivot(false)] },
 };
 // Walking arriba: he walks forward and she backward, one place round the
 // circle a bar (travel), everyone at once. The joined hands pump (pump: up on
 // 1, down on 2, up on 3, down on 5, up on 6, down on 7), each one's shoulder
-// on that side going with them. The body glides on each step and rests on
-// the 4 and the 8.
-const WALK = [[0, 0], [1, 1.3], [2, 2.3], [3, 3], [4, 3], [5, 4.3], [6, 5.3], [7, 6], [8, 6]];
-const walk = (lead) => WALK.map(([b, x]) => [b, (lead ? -1 : 1) * (OPEN + CLOSED) + x / 6, lead ? -SIDE : SIDE, -180, (lead ? 1 : -1) * (OPEN + CLOSED)]);
+// on that side going with them. The body travels at an even pace, through
+// the 4 and the 8 too.
+const WALK = [0, 1, 2, 3, 4, 5, 6, 7, 8].map((b) => [b, b * 0.75]);
+const walk = (lead) => WALK.map(([b, x]) => [b, (lead ? -1 : 1) * (OPEN + CLOSED) + GO + x / 6, lead ? -SIDE : SIDE, -180, (lead ? 1 : -1) * (OPEN + CLOSED)]);
 const ARRIBA = {
   shift: 0, travel: 1, flow: true, closed: true, pump: [[0, 1], [1, 0], [2, 1], [4, 0], [5, 1], [6, 0]],
-  lead: { root: walk(true), pelvis: [[0, 0]], angle: [[0, 0]], ...walkSteps(0.25) },
-  follow: { root: walk(false), pelvis: [[0, 0]], angle: [[0, 0]], ...walkSteps(-0.25) },
+  lead: { root: walk(true), pelvis: [[0, 0]], angle: [[0, 0]], ...walkSteps(1, [0.5, 0.6, 0.7]) },
+  follow: { root: walk(false), pelvis: [[0, 0]], angle: [[0, 0]], ...walkSteps(-1, [0.5, 0.6, 0.7]) },
 };
 // The dile que no out of arriba: the setenta's, from the closed hold
 // (fromArriba). On 1-2-3 he rocks back, turning a little to his left, and on
