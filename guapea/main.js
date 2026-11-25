@@ -457,28 +457,53 @@ const ARRIBA_DILE = {
   follow: { ...SETENTA_DILE.follow, O: [[0, 0.4, 0, 2.6], ...SETENTA_DILE.follow.O.slice(1)], root: [walk(false)[0], [1, 0.37, -2.6, -186], ...SETENTA_DILE.follow.root.filter(([b]) => b >= 2)] },
 };
 // The tarrito, out of arriba: on 1 they let go of each other's backs and the
-// joined hands go up into an arch (tarrito: the hands' windows, see hands()).
+// joined hands go up into an arch (arch and take: the hands' windows, see
+// hands()).
 // He hurries on under it, past her on the inside of the circle, right
 // shoulder by right shoulder (TARRITO_OUT: px out from the center, added to
 // the hold's), while she walks on backward. They let go on 4 and he walks on
 // to the girl ahead, whose partner has gone on under her arm too, and by the
 // 8 they are in the closed hold, walking on arriba. So he covers two places
 // in the bar (TARRITO_ALONG, in places at each count) while the girls walk
-// one and move on one (shift). To cover the ground he steps on every count,
-// a little lower (duck, px).
-const TARRITO_ALONG = [0, 0.19, 0.47, 0.77, 1.07, 1.37, 1.64, 1.86, 2];
+// one and move on one (shift). To cover the ground he takes long strides, a
+// little lower (duck, px).
+const TARRITO_ALONG = [0, 0.2, 0.5, 0.78, 1.06, 1.36, 1.64, 1.86, 2];
 const TARRITO_OUT = [0, -2.6, -7.4, -8.3, -6, -3.4, -1.6, -0.4, 0];
 const TARRITO_SWAY = [[0, 1], [1.2, 0.3], [3.6, 0.3], [4.6, 1]]; // the hips quieter as they pass
+// His steps while he hurries, still on 1-2-3 and 5-6-7: each foot stays down
+// only until the other one lands ([5]), so the foot behind takes a long
+// stride through the 4 and the 8 while the body keeps going. f: how far
+// ahead each one lands, O on 1, 3, 6 and I on 2, 5, 7.
+const hurry = (f) => ({
+  O: [[0, f[0], 0, 2.4, 0, 1.1], [2, f[1], 0, 2.6, 0, 2.1], [5, f[2], 0, 2.6, 0, 1.1]],
+  I: [[1, f[3], 0, 2.6, 0, 1.1], [4, f[4], 0, 2.4, 0, 1.1], [6, f[5], 0, 2.6, 0, 2.1]],
+});
+const tarritoRoot = (along, out) => walk(true).map(([b, a, o, ...r]) => [b, a - b / 8 + along[b], o + out[b], ...r]);
 const TARRITO = {
-  ...ARRIBA, shift: 1, travel: 2, whoosh: [1], tarrito: [0, 0.8, 3, 3.9, 5, 6.2, 6, 7.2], pump: [[0, 1], [3.6, 0.4], [5, 1], [6, 0]],
+  ...ARRIBA, shift: 1, travel: 2, whoosh: [1], tarrito: true, arch: [0, 0.8, 3, 3.9], take: [5, 6.2, 6, 7.2], pump: [[0, 1], [3.6, 0.4], [5, 1], [6, 0]],
   lead: {
-    ...ARRIBA.lead, root: walk(true).map(([b, along, out, ...r]) => [b, along - b / 8 + TARRITO_ALONG[b], out + TARRITO_OUT[b], ...r]),
-    hips: [0, 1, 2, 3, 4, 5, 6, 7].map((c) => [c, c % 2 ? -1 : 1]), sway: TARRITO_SWAY, duck: [[0.6, 2], [5.6, 2], [6.8, 0]],
-    O: [[0, 0.3, 0, 2.6], [2, 0, 0, 2.6], [4, 0, 0, 2.6], [6, 0.1, 0, 2.6]], I: [[1, -0.1, 0, 2.6], [3, 0, 0, 2.6], [5, 0, 0, 2.6], [7, 0.3, 0, 2.6]],
+    ...ARRIBA.lead, root: tarritoRoot(TARRITO_ALONG, TARRITO_OUT), sway: TARRITO_SWAY, duck: [[0.6, 2], [2, 3], [4, 3], [5.6, 2], [6.8, 0]],
+    ...hurry([0.2, 0.6, 0.1, -0.4, -0.2, 0.2]),
   },
   // She leans a little out of his way as he passes.
   follow: { ...ARRIBA.follow, sway: TARRITO_SWAY, root: walk(false).map(([b, along, out, ...r]) => [b, along, out + [0, 0.4, 1, 1.2, 0.6, 0, 0, 0, 0][b], ...r]) },
 };
+// The tarrito hasta la tuya: the tarrito's arch, but he walks on round the
+// inside of the circle (INSIDE px) past every girl, one a bar, at the
+// tarrito's pace, until he comes out to his own girl in the last bar and
+// takes her as in the tarrito; then they walk on arriba. The bars are those
+// of the tarrito (shift, travel) without the hands he doesn't take: the first
+// with the arch (TUYA_IN), one on the inside for every other couple
+// (TUYA_ROUND, see build()), and the last with the new hold (TUYA_OUT).
+const INSIDE = -8;
+const tuya = (along, out, duck, f, hands) => ({
+  ...TARRITO, whoosh: [], arch: null, take: null, pump: [[0, 0]], ...hands,
+  lead: { ...TARRITO.lead, root: tarritoRoot(along, out), duck, ...hurry(f) },
+});
+const I8 = Array(9).fill(INSIDE);
+const TUYA_IN = tuya([0, 0.19, 0.47, 0.75, 1, 1.25, 1.5, 1.75, 2], [0, -2.6, -7.4, ...I8.slice(3)], [[0.6, 2]], [0.2, 0.5, 0.1, -0.4, -0.2, 0.5], { whoosh: [1], arch: TARRITO.arch, pump: [[0, 1], [3.6, 0]] });
+const TUYA_ROUND = tuya([0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2], I8, [[0, 2]], [0.2, 0.6, 0.1, -0.4, -0.2, 0.5], {});
+const TUYA_OUT = tuya([0, 0.27, 0.54, 0.81, 1.08, 1.37, 1.64, 1.86, 2], [...I8.slice(4), -6, -3.4, -1.6, -0.4, 0], TARRITO.lead.duck, [0.2, 0.6, 0.1, -0.4, -0.2, 0.2], { take: TARRITO.take, pump: [[0, 0], [5, 1], [6, 0]] });
 const MOVES = {
   dame: {
     id: 'dame', name: 'DAME', say: '¡Dame!', bars: [DAME],
@@ -547,6 +572,10 @@ const MOVES = {
     id: 'tarrito', name: 'TARRITO', say: '¡Tarrito!', bars: [TARRITO], from: 'arriba', loop: ARRIBA, to: 'arriba',
     blurb: 'The joined hands go up into an arch and he walks on under her arm while she keeps walking. By the 8 he has the girl ahead in the closed hold and they walk on arriba. Everyone has a new partner.',
   },
+  tuya: {
+    id: 'tuya', name: 'TARRITO HASTA LA TUYA', say: '¡Tarrito hasta la tuya!', bars: [], from: 'arriba', loop: ARRIBA, to: 'arriba',
+    blurb: 'A tarrito, but he walks on round the inside of the circle, past every girl, a bar each, until he is back with his own. Then they walk on arriba.',
+  },
 };
 
 // The calls: measure number -> move id; the move's bars follow from that
@@ -608,6 +637,16 @@ function activeAbs(keys, b, pre, post) {
   let i = 0;
   for (let k = 0; k < keys.length; k++) if (keys[k][0] - pre <= b) i = k;
   return { k: keys[i], prev: keys[Math.max(0, i - 1)], u: clamp((b - (keys[i][0] - pre)) / (pre + post), 0, 1) };
+}
+// A foot's step at beat b, as activeAbs: it lifts LIFT before it lands, or
+// earlier if the step before it says how long it stays down ([5], beats).
+// Such a long stride (long) goes on steadily all the way, so the foot doesn't
+// get ahead of the body and wait there.
+function stepAt(keys, b) {
+  const pre = (k) => (k > 0 && keys[k - 1][5] !== undefined ? Math.max(LIFT, keys[k][0] - keys[k - 1][0] - keys[k - 1][5]) : LIFT);
+  let i = 0;
+  for (let k = 0; k < keys.length; k++) if (keys[k][0] - pre(k) <= b) i = k;
+  return { k: keys[i], prev: keys[Math.max(0, i - 1)], u: clamp((b - (keys[i][0] - pre(i))) / pre(i), 0, 1), long: pre(i) > LIFT };
 }
 // Root keys as a smooth curve (Hermite with damped Catmull-Rom tangents), at
 // rest on the first and last key.
@@ -689,6 +728,7 @@ function build() {
   // A tight circle: the next couple is about as close as your partner.
   R = (n * (DIST + 24)) / TAU;
   SLOT = TAU / n;
+  MOVES.tuya.bars = [TUYA_IN, ...Array(n - 2).fill(TUYA_ROUND), TUYA_OUT]; // a bar for each girl he passes
   leads = []; follows = [];
   timeline.clear(); baseShift = 0; baseTravel = 0;
   for (let k = 0; k < n; k++) {
@@ -761,10 +801,10 @@ function body(d, b) {
   const knee = (hip, ankle) => ik(hip, ankle, THIGH, SHIN, v3(here.f.x, here.f.y, 0.25)).mid;
   const out = { t, d, Lw, pf, ps, pz, dp, pelvis, f: here.f, l: here.l, h: here.h };
   for (const [name, side] of [['O', sO], ['I', -sO]]) {
-    const a = activeAbs(keysAround(d, name, b), b, LIFT, 0), z = Math.sin(Math.PI * a.u) * a.k[3];
+    const a = stepAt(keysAround(d, name, b), b), z = Math.sin(Math.PI * a.u) * a.k[3];
     const heel = lerp(a.prev[4] ?? 0, a.k[4] ?? 0, inOut(a.u)); // a toe tap's heel stays up
     const hip = Lw(pf, ps + side * 2.1, pz);
-    let p = mix(landing(a.prev, side * 2.3), landing(a.k, side * 2.3), inOut(a.u));
+    let p = mix(landing(a.prev, side * 2.3), landing(a.k, side * 2.3), a.long ? smooth(a.u) : inOut(a.u));
     // A foot the body has left behind slides along rather than stretching the leg.
     const far = Math.sqrt(Math.max(0, (THIGH + SHIN) ** 2 * 0.97 - (pz - 1.3 - z) ** 2)), dh = Math.hypot(p.x - hip.x, p.y - hip.y);
     if (dh > far) p = v3(hip.x + ((p.x - hip.x) * far) / dh, hip.y + ((p.y - hip.y) * far) / dh, 0);
@@ -1040,10 +1080,11 @@ function hands(b) {
     if (fig.tarrito) {
       // The tarrito: on 1 they let go of each other's backs (off) and the
       // joined hands go on up into the arch he walks under. They let
-      // go of it on 4 (letGo), his left takes the right hand of the girl
-      // ahead on 6 (take), and by the 8 they are in the closed hold (on).
-      const [o0, o1, g0, g1, k0, k1, h0, h1] = fig.tarrito;
-      const off = ramp(t, o0, o1), letGo = ramp(t, g0, g1), take = ramp(t, k0, k1), on = ramp(t, h0, h1);
+      // go of it on 4 (letGo) (arch: those windows). His left takes the right
+      // hand of the girl ahead on 6 (take), and by the 8 they are in the closed
+      // hold (on) (take: those windows). Without them the hands are free.
+      const off = fig.arch ? ramp(t, fig.arch[0], fig.arch[1]) : 1, letGo = fig.arch ? ramp(t, fig.arch[2], fig.arch[3]) : 1;
+      const take = fig.take ? ramp(t, fig.take[0], fig.take[1]) : 0, on = fig.take ? ramp(t, fig.take[2], fig.take[3]) : 0;
       // In the arch they stretch up, the shoulder on that side going up too,
       // so the hands are as high above them as they reach, not hidden behind
       // his head as he goes under.
