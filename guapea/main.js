@@ -398,12 +398,19 @@ const PELOTA4_TURN = {
   follow: { root: quarters(ENCHUFLA.follow.root.at(-1).slice(1)), pelvis: [[0, 0]], angle: [[0, 0]], hips: TURN_HIPS.map(([b, v]) => [b, -v]), ...TURN_STEPS('I', 'O') },
 };
 // Arriba: a dile que si into the closed hold, then the couples walk round the
-// circle in it, bar after bar (loop), until the dile que no. In places along
-// the circle: OPEN is half the distance between partners in the guapea,
-// CLOSED in the closed hold. Off their own places they face each other by
-// aiming (root) back to the middle between them. In the hold she is a little
-// to his right (SIDE px, outside the circle).
-const OPEN = DIST / 2 / (DIST + 24), CLOSED = 5 / (DIST + 24), SIDE = 1.2;
+// circle in it, bar after bar (loop), until the dile que no. The rueda
+// closes up for it (see ringAt()), so these figures' keys say where each one
+// is from the middle of the couple in px (gap, see root()): the couple's
+// place, -OPEN from his own (in places, half the distance between partners
+// in the guapea) and OPEN from hers, and the gap from there. CLOSED is half
+// the distance between them in the closed hold (px). Off their own places
+// they face each other by aiming (root) back to the middle between them. In
+// the hold she is a little to his right (SIDE px, outside the circle).
+const PLACE = DIST + 24; // px from couple to couple round the circle, at full size
+const OPEN = DIST / 2 / PLACE, CLOSED = 5, SIDE = 1.2;
+// A key from a dancer's own place ([beat, along, out, turn, aim]) as one
+// from the middle of the couple, the same at full size.
+const gapped = (lead, [b, al, out, turn, aim = 0]) => { const h = lead ? OPEN : -OPEN; return [b, -h, out, turn, aim + al + h, (h + al) * PLACE]; };
 // Steps on 1-2-3 and 5-6-7, his left foot first and her right. The body
 // doesn't stop on the 4 and the 8, so each step lands a little ahead of it
 // (behind her), [a, b, c] steps for the steps on 1, 2, 3 and on 5, 6, 7, the
@@ -416,11 +423,11 @@ const walkSteps = (dir, [a, b, c]) => ({ O: [[0, dir * a, 0, 2.6], [2, dir * c, 
 // they end swapped, in line, him facing South. From 5 on the couple also
 // sets off along the circle (GO places by the 8), so on the 1 they are
 // already walking at the walk's pace.
-const PIVOT = [[2, 0, OPEN - 0.01], [3, 8, OPEN - 0.04], [4, 40, 0.165], [5, 105, 0.135], [6, 160, CLOSED + 0.005], [7, 176, CLOSED], [8, 180, CLOSED]];
+const PIVOT = [[2, 0, OPEN - 0.01], [3, 8, OPEN - 0.04], [4, 40, 0.165], [5, 105, 0.135], [6, 160, CLOSED / PLACE + 0.005], [7, 176, CLOSED / PLACE], [8, 180, CLOSED / PLACE]];
 const GO = 0.1875, go = (b) => (b < 5 ? 0 : (GO * (b - 5) ** 2) / 9);
 const pivot = (lead) => PIVOT.map(([b, a, r]) => {
-  const off = OPEN - r * Math.cos(a * DEG), side = SIDE * smooth(clamp((a - 90) / 90, 0, 1)) * (lead ? -1 : 1);
-  return [b, (lead ? -off : off) + go(b), (lead ? 1 : -1) * r * (DIST + 24) * Math.sin(a * DEG) + side, -a, lead ? off : -off];
+  const h = lead ? OPEN : -OPEN, side = SIDE * smooth(clamp((a - 90) / 90, 0, 1)) * (lead ? -1 : 1);
+  return [b, go(b) - h, (lead ? 1 : -1) * r * PLACE * Math.sin(a * DEG) + side, -a, h, (lead ? 1 : -1) * r * PLACE * Math.cos(a * DEG)];
 });
 // On 1-2-3 a short extension: they lean away from each other on 1, the
 // joined hands down and out, and come back on 2-3. On 5-6-7 they turn half
@@ -432,8 +439,8 @@ const pivot = (lead) => PIVOT.map(([b, a, r]) => {
 const dileQueSiSteps = (dir) => ({ pelvis: [[0, -1], [1, -0.35], [2, 0], [4, 0.2], [6, 0]], angle: [[0, 0]], O: [[0, -1, 0, 2.6], [2, 0, 0, 2.2], [5, 0.3 * dir, 0, 2.6]], I: [[1, 0, 0, 1.6], [4, 0, 0, 2.6], [6, 0.6 * dir, 0, 2.4]] });
 const DILE_QUE_SI = {
   shift: 0, whoosh: [4], closed: [3.4, 6.4],
-  lead: { ...dileQueSiSteps(1), root: [[0, 0, 0, 0], [0.7, 0.03, 0, 0], ...pivot(true)] },
-  follow: { ...dileQueSiSteps(-1), root: [[0, 0, 0, 0], [0.7, -0.03, 0, 0], ...pivot(false)] },
+  lead: { ...dileQueSiSteps(1), root: [gapped(true, [0, 0, 0, 0]), gapped(true, [0.7, 0.03, 0, 0]), ...pivot(true)] },
+  follow: { ...dileQueSiSteps(-1), root: [gapped(false, [0, 0, 0, 0]), gapped(false, [0.7, -0.03, 0, 0]), ...pivot(false)] },
 };
 // Walking arriba: he walks forward and she backward, one place round the
 // circle a bar (travel), everyone at once. The joined hands pump (pump: up on
@@ -441,7 +448,7 @@ const DILE_QUE_SI = {
 // on that side going with them. The body travels at an even pace, through
 // the 4 and the 8 too.
 const WALK = [0, 1, 2, 3, 4, 5, 6, 7, 8].map((b) => [b, b * 0.75]);
-const walk = (lead) => WALK.map(([b, x]) => [b, (lead ? -1 : 1) * (OPEN + CLOSED) + GO + x / 6, lead ? -SIDE : SIDE, -180, (lead ? 1 : -1) * (OPEN + CLOSED)]);
+const walk = (lead) => WALK.map(([b, x]) => [b, (lead ? -OPEN : OPEN) + GO + x / 6, lead ? -SIDE : SIDE, -180, lead ? OPEN : -OPEN, lead ? -CLOSED : CLOSED]);
 const ARRIBA = {
   shift: 0, travel: 1, flow: true, closed: true, pump: [[0, 1], [1, 0], [2, 1], [4, 0], [5, 1], [6, 0]],
   lead: { root: walk(true), pelvis: [[0, 0]], angle: [[0, 0]], ...walkSteps(1, [0.5, 0.6, 0.7]) },
@@ -450,11 +457,13 @@ const ARRIBA = {
 // The dile que no out of arriba: the setenta's, from the closed hold
 // (fromArriba). On 1-2-3 he rocks back, turning a little to his left, and on
 // 5-6-7 she crosses in front of him while he turns half round to his left,
-// back in the guapea with the same partner, where they walked to.
+// back in the guapea with the same partner, where they walked to. The rueda
+// opens up as they do it, so from 5 on it is the guapea's dile que no, in
+// places like the guapea after it.
 const ARRIBA_DILE = {
   ...SETENTA_DILE, fromHats: true, fromArriba: true,
-  lead: { ...SETENTA_DILE.lead, O: [[0, -0.5, 0, 2.6], ...SETENTA_DILE.lead.O.slice(1)], root: [walk(true)[0], [1, -0.32, -1.6, -158], [2, -0.29, -2.3, -136], [3, -0.26, -2.5, -116], ...SETENTA_DILE.lead.root.filter(([b]) => b >= 4)] },
-  follow: { ...SETENTA_DILE.follow, O: [[0, 0.4, 0, 2.6], ...SETENTA_DILE.follow.O.slice(1)], root: [walk(false)[0], [1, 0.37, -2.6, -186], ...SETENTA_DILE.follow.root.filter(([b]) => b >= 2)] },
+  lead: { ...SETENTA_DILE.lead, O: [[0, -0.5, 0, 2.6], ...SETENTA_DILE.lead.O.slice(1)], root: [walk(true)[0], ...[[1, -0.32, -1.6, -158], [2, -0.29, -2.3, -136], [3, -0.26, -2.5, -116]].map((k) => gapped(true, k)), ...SETENTA_DILE.lead.root.filter(([b]) => b >= 4)] },
+  follow: { ...SETENTA_DILE.follow, O: [[0, 0.4, 0, 2.6], ...SETENTA_DILE.follow.O.slice(1)], root: [walk(false)[0], ...[[1, 0.37, -2.6, -186], ...SETENTA_DILE.follow.root.filter(([b]) => b >= 2 && b < 4)].map((k) => gapped(false, k)), ...SETENTA_DILE.follow.root.filter(([b]) => b >= 4)] },
 };
 // The tarrito, out of arriba: on 1 they let go of each other's backs and the
 // joined hands go up into an arch (arch and take: the hands' windows, see
@@ -489,21 +498,32 @@ const TARRITO = {
   follow: { ...ARRIBA.follow, sway: TARRITO_SWAY, root: walk(false).map(([b, along, out, ...r]) => [b, along, out + [0, 0.4, 1, 1.2, 0.6, 0, 0, 0, 0][b], ...r]) },
 };
 // The tarrito hasta la tuya: the tarrito's arch, but he walks on round the
-// inside of the circle (INSIDE px) past every girl, one a bar, at the
-// tarrito's pace, until he comes out to his own girl in the last bar and
-// takes her as in the tarrito; then they walk on arriba. The bars are those
-// of the tarrito (shift, travel) without the hands he doesn't take: the first
-// with the arch (TUYA_IN), one on the inside for every other couple
-// (TUYA_ROUND, see build()), and the last with the new hold (TUYA_OUT).
-const INSIDE = -8;
-const tuya = (along, out, duck, f, hands) => ({
-  ...TARRITO, whoosh: [], arch: null, take: null, pump: [[0, 0]], ...hands,
-  lead: { ...TARRITO.lead, root: tarritoRoot(along, out), duck, ...hurry(f) },
-});
-const I8 = Array(9).fill(INSIDE);
-const TUYA_IN = tuya([0, 0.19, 0.47, 0.75, 1, 1.25, 1.5, 1.75, 2], [0, -2.6, -7.4, ...I8.slice(3)], [[0.6, 2]], [0.2, 0.5, 0.1, -0.4, -0.2, 0.5], { whoosh: [1], arch: TARRITO.arch, pump: [[0, 1], [3.6, 0]] });
-const TUYA_ROUND = tuya([0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2], I8, [[0, 2]], [0.2, 0.6, 0.1, -0.4, -0.2, 0.5], {});
-const TUYA_OUT = tuya([0, 0.27, 0.54, 0.81, 1.08, 1.37, 1.64, 1.86, 2], [...I8.slice(4), -6, -3.4, -1.6, -0.4, 0], TARRITO.lead.duck, [0.2, 0.6, 0.1, -0.4, -0.2, 0.2], { take: TARRITO.take, pump: [[0, 0], [5, 1], [6, 0]] });
+// inside of the circle (INSIDE px) past every girl, two a bar, until he comes
+// out to his own girl in the last bar and takes her as in the tarrito; then
+// they walk on arriba. tuyaBars(n): a bar for every two couples (rounded up),
+// the first with the arch, the last with the new hold, and his hands free in
+// between. Past the girls he goes at an even pace (rel: how many places he
+// has gained on them, A beats to get going and C to come up to her), and
+// each bar's shift is the girls he has passed by its end, rounded.
+const INSIDE = -12;
+function tuyaBars(n) {
+  const B = Math.ceil(n / 2), T = 8 * B, A = 2.5, C = 4, w = n / (T - (A + C) / 2);
+  const I = (x) => x ** 3 - x ** 4 / 2; // smooth's integral
+  const rel = (u) => w * (u < A ? A * I(u / A) : u > T - C ? T - (A + C) / 2 - C * I((T - u) / C) : u - A / 2);
+  const counts = [0, 1, 2, 3, 4, 5, 6, 7, 8], passed = (j) => Math.round(rel(8 * j));
+  return Array.from({ length: B }, (_, j) => {
+    const first = j === 0, last = j === B - 1, shift = passed(j + 1) - passed(j);
+    const along = counts.map((b) => b / 8 + rel(8 * j + b) - passed(j));
+    const out = counts.map((b) => (first && b < 4 ? [0, -2.6, -7.4, -10.5][b] : last && b > 2 ? [-11, -8.5, -5, -2, -0.5, 0][b - 3] : INSIDE));
+    return {
+      ...TARRITO, shift, travel: shift + 1, whoosh: first ? [1] : [], arch: first ? TARRITO.arch : null, take: last ? TARRITO.take : null,
+      pump: [...(first ? [[0, 1], [3.6, 0]] : [[0, 0]]), ...(last ? [[5, 1], [6, 0]] : [])],
+      lead: { ...TARRITO.lead, root: tarritoRoot(along, out), duck: last ? TARRITO.lead.duck : first ? [[0.6, 2]] : [[0, 2]], ...hurry([0.2, first ? 0.5 : 0.6, 0.1, -0.4, -0.2, last ? 0.2 : 0.5]) },
+      // Only her own partner passes her at the tarrito's beats.
+      follow: first ? TARRITO.follow : { ...TARRITO.follow, root: walk(false) },
+    };
+  });
+}
 const MOVES = {
   dame: {
     id: 'dame', name: 'DAME', say: '¡Dame!', bars: [DAME],
@@ -562,7 +582,7 @@ const MOVES = {
   // call, and to: what the rueda is doing then.
   arriba: {
     id: 'arriba', name: 'ARRIBA', say: '¡Arriba!', bars: [DILE_QUE_SI], loop: ARRIBA, to: 'arriba',
-    blurb: 'A dile que si: a short extension, then a half turn together into the closed hold. Then every couple walks round the circle, a place a bar, the joined hands pumping, until the next call.',
+    blurb: 'A dile que si: a short extension, then a half turn together into the closed hold. The rueda closes up and every couple walks round the circle, a place a bar, the joined hands pumping, until the next call.',
   },
   dilequeno: {
     id: 'dilequeno', name: 'DILE QUE NO', say: '¡Dile que no!', bars: [ARRIBA_DILE], from: 'arriba',
@@ -574,7 +594,7 @@ const MOVES = {
   },
   tuya: {
     id: 'tuya', name: 'TARRITO HASTA LA TUYA', say: '¡Tarrito hasta la tuya!', bars: [], from: 'arriba', loop: ARRIBA, to: 'arriba',
-    blurb: 'A tarrito, but he walks on round the inside of the circle, past every girl, a bar each, until he is back with his own. Then they walk on arriba.',
+    blurb: 'A tarrito, but he walks on round the inside of the circle, past every girl, two a bar, until he is back with his own. Then they walk on arriba.',
   },
 };
 
@@ -657,7 +677,7 @@ function evalRoot(keys, t) {
   const v = (k, c) => k[c] ?? 0; // aim is optional
   const tan = (j, c) => (j <= 0 || j >= keys.length - 1 ? 0 : ((v(keys[j + 1], c) - v(keys[j - 1], c)) / (keys[j + 1][0] - keys[j - 1][0])) * 0.85);
   const u2 = u * u, u3 = u2 * u;
-  return [1, 2, 3, 4].map((c) => (2 * u3 - 3 * u2 + 1) * v(a, c) + (u3 - 2 * u2 + u) * h * tan(i, c) + (3 * u2 - 2 * u3) * v(b, c) + (u3 - u2) * h * tan(i + 1, c));
+  return [1, 2, 3, 4, 5].map((c) => (2 * u3 - 3 * u2 + 1) * v(a, c) + (u3 - 2 * u2 + u) * h * tan(i, c) + (3 * u2 - 2 * u3) * v(b, c) + (u3 - u2) * h * tan(i + 1, c));
 }
 const ramp = (t, a, b) => smooth(clamp((t - a) / (b - a), 0, 1));
 const bump = (t, a, b, c) => ramp(t, a, b) * (1 - ramp(t, b, c));
@@ -728,7 +748,10 @@ function build() {
   // A tight circle: the next couple is about as close as your partner.
   R = (n * (DIST + 24)) / TAU;
   SLOT = TAU / n;
-  MOVES.tuya.bars = [TUYA_IN, ...Array(n - 2).fill(TUYA_ROUND), TUYA_OUT]; // a bar for each girl he passes
+  // In arriba the circle closes up to a place every RING * PLACE px, but with
+  // few couples not so far that the guys going round inside run into each other.
+  RING = Math.min(1, Math.max(0.72, 22 / R));
+  MOVES.tuya.bars = tuyaBars(n);
   leads = []; follows = [];
   timeline.clear(); baseShift = 0; baseTravel = 0;
   for (let k = 0; k < n; k++) {
@@ -766,16 +789,35 @@ function rootKeys(d, m) {
   return [...(fig.flow ? moved(prev, -8, prev.shift, -(prev.travel ?? 0)).slice(0, -1) : []), ...fig[d.role].root, ...(next.flow ? moved(next, 8, -fig.shift, fig.travel ?? 0).slice(1) : [])];
 }
 
+// The circle's size at beat b, against the guapea's. In arriba the rueda
+// closes up (to RING, see build()), so a place round the circle is shorter
+// and the walk and the tarritos cover less ground: from the dile que si's 2
+// on, into the first bar walking. It opens up again from the dile que no's
+// 1, into the bar after it.
+let RING = 1;
+function ringIn(m, t) {
+  const fig = figureAt(m), prev = figureAt(m - 1);
+  if (fig === DILE_QUE_SI) return lerp(ringIn(m - 1, 8), RING, ramp(t, 2, 13));
+  if (fig === ARRIBA_DILE) return lerp(ringIn(m - 1, 8), 1, ramp(t, 0, 12));
+  if (prev === DILE_QUE_SI) return lerp(ringIn(m - 2, 8), RING, ramp(t + 8, 2, 13));
+  if (prev === ARRIBA_DILE) return lerp(ringIn(m - 2, 8), 1, ramp(t + 8, 0, 12));
+  return fig.closed === true ? RING : 1;
+}
+const ringAt = (b) => { const m = Math.floor(b / 8); return ringIn(m, b - m * 8); };
+
 // Where a dancer's body is at beat b: a spot on the floor and a heading. The
 // leads keep their places; a follow's home spot moves on one place clockwise
 // per partner change. Walking arriba moves everyone's on counterclockwise.
+// A gap (px) moves them round the circle without turning them, so it stays
+// the same in px however big the circle is.
 function root(d, b) {
   let m = Math.floor(b / 8);
   if (b - (m + 1) * 8 >= figureAt(m + 1)[d.role].root[0][0]) m++; // the next move's preparation
-  const [along, out, turn, aim] = evalRoot(rootKeys(d, m), b - m * 8);
-  const a = ((d.lead ? 0 : -shiftBefore(m)) + travelBefore(m) + along) * SLOT, c = Math.cos(a), s = Math.sin(a);
-  const x = d.home.x * c - d.home.y * s, y = d.home.x * s + d.home.y * c, r = Math.hypot(x, y);
-  const h = d.h0 + a + turn * DEG + aim * SLOT;
+  const [along, out, turn, aim, gap] = evalRoot(rootKeys(d, m), b - m * 8);
+  const k = ringAt(b), g = gap / (k * PLACE);
+  const a = ((d.lead ? 0 : -shiftBefore(m)) + travelBefore(m) + along + g) * SLOT, c = Math.cos(a), s = Math.sin(a);
+  const x = k * (d.home.x * c - d.home.y * s), y = k * (d.home.x * s + d.home.y * c), r = Math.hypot(x, y);
+  const h = d.h0 + a + turn * DEG + (aim - g) * SLOT;
   return { x: x + (x / r) * out, y: y + (y / r) * out, h, f: { x: Math.cos(h), y: Math.sin(h) }, l: { x: -Math.sin(h), y: Math.cos(h) } };
 }
 
@@ -794,9 +836,11 @@ function body(d, b) {
   const pelvis = Lw(pf, ps, pz);
   // A foot lands where the body is about to be and stays there until it
   // lifts again, so traveling steps don't skate.
+  // While the circle closes up or opens out it lands where the circle will
+  // be a little later (q), so the body drifts across it, not away from it.
   const landing = (k, side) => {
-    const r = root(d, k[0] + LOOK), s = side + k[2] * -sO;
-    return v3(r.x + r.f.x * k[1] * S + r.l.x * s, r.y + r.f.y * k[1] * S + r.l.y * s, 0);
+    const r = root(d, k[0] + LOOK), s = side + k[2] * -sO, q = ringAt(k[0] + 2 * LOOK) / ringAt(k[0] + LOOK);
+    return v3(q * (r.x + r.f.x * k[1] * S + r.l.x * s), q * (r.y + r.f.y * k[1] * S + r.l.y * s), 0);
   };
   const knee = (hip, ankle) => ik(hip, ankle, THIGH, SHIN, v3(here.f.x, here.f.y, 0.25)).mid;
   const out = { t, d, Lw, pf, ps, pz, dp, pelvis, f: here.f, l: here.l, h: here.h };
@@ -1081,8 +1125,9 @@ function hands(b) {
       // The tarrito: on 1 they let go of each other's backs (off) and the
       // joined hands go on up into the arch he walks under. They let
       // go of it on 4 (letGo) (arch: those windows). His left takes the right
-      // hand of the girl ahead on 6 (take), and by the 8 they are in the closed
-      // hold (on) (take: those windows). Without them the hands are free.
+      // hand of the girl he comes up to (the bar's shift on) on 6 (take), and
+      // by the 8 they are in the closed hold (on) (take: those windows).
+      // Without them the hands are free.
       const off = fig.arch ? ramp(t, fig.arch[0], fig.arch[1]) : 1, letGo = fig.arch ? ramp(t, fig.arch[2], fig.arch[3]) : 1;
       const take = fig.take ? ramp(t, fig.take[0], fig.take[1]) : 0, on = fig.take ? ramp(t, fig.take[2], fig.take[3]) : 0;
       // In the arch they stretch up, the shoulder on that side going up too,
@@ -1092,15 +1137,15 @@ function hands(b) {
       for (const d of dancers()) { const B = d.pose; B.shO = add(B.shO, v3(0, 0, 1.4 * pump + 2.5 * up)); B.shI = add(B.shI, v3(0, 0, -0.6 * pump)); }
       const arch = [], neu = [];
       for (let i = 0; i < n; i++) {
-        const L = leads[i].pose, Fo = follows[mod(i + s, n)].pose, Fn = follows[mod(i + s + 1, n)].pose, mid = mix(L.shO, Fo.shO, 0.5);
+        const L = leads[i].pose, Fo = follows[mod(i + s, n)].pose, Fn = follows[mod(i + s + fig.shift, n)].pose, mid = mix(L.shO, Fo.shO, 0.5);
         arch[i] = mix(closedGrip(L, Fo, pump), reachable(v3(mid.x, mid.y, mid.z + REACH), L.shO, Fo.shO), ramp(t, 0, 1.2));
         neu[i] = closedGrip(L, Fn, pump);
         aim(L, mix(mix(arch[i], rest(L, L.d.sO), letGo), neu[i], take), mix(mix(herBack(Fo), rest(L, -L.d.sO), off), herBack(Fn), on));
         L.around = { I: on > 0 ? { on: Fn, w: on, side: v3(Fn.l.x, Fn.l.y, -0.3) } : { on: Fo, w: 1 - off, side: v3(Fo.l.x, Fo.l.y, -0.3) } };
       }
       for (let j = 0; j < n; j++) {
-        const F = follows[j].pose, Lo = leads[mod(j - s, n)].pose, Ln = leads[mod(j - s - 1, n)].pose, over = 5 * Math.sin(Math.PI * (on > 0 ? on : off));
-        aim(F, mix(mix(arch[mod(j - s, n)], rest(F, F.d.sO), letGo), neu[mod(j - s - 1, n)], take), add(mix(mix(hisBack(Lo), rest(F, -F.d.sO), off), hisBack(Ln), on), v3(0, 0, over)));
+        const F = follows[j].pose, Lo = leads[mod(j - s, n)].pose, Ln = leads[mod(j - s - fig.shift, n)].pose, over = 5 * Math.sin(Math.PI * (on > 0 ? on : off));
+        aim(F, mix(mix(arch[mod(j - s, n)], rest(F, F.d.sO), letGo), neu[mod(j - s - fig.shift, n)], take), add(mix(mix(hisBack(Lo), rest(F, -F.d.sO), off), hisBack(Ln), on), v3(0, 0, over)));
         F.around = { I: on > 0 ? { on: Ln, w: on, side: v3(-Ln.l.x, -Ln.l.y, 0.2) } : { on: Lo, w: 1 - off, side: v3(-Lo.l.x, -Lo.l.y, 0.2) } };
       }
       return;
