@@ -15,6 +15,7 @@
   #moves { flex: 0 0 236px; display: flex; flex-direction: column; padding: 12px 10px 12px 12px; background: #1c1016; border-right: 3px solid #e8b048; box-shadow: 4px 0 0 #000; overflow-y: auto; }
   #moves h2 { margin: 0 0 2px; font-size: 13px; letter-spacing: 0.14em; color: #f8d040; }
   #moves > p { margin: 0 0 10px; color: #c0a888; font-size: 11px; }
+  #moves h3 { margin: 0 0 8px; padding: 3px 6px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #1c1016; background: #e8b048; box-shadow: 2px 2px 0 #000; }
   #moves ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
   #moves li button { width: 100%; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 4px 8px; padding: 8px 9px; text-align: left;
     color: #f2e6cc; background: #24121a; border: 2px solid #5a3a2a; box-shadow: 3px 3px 0 #000; }
@@ -58,6 +59,7 @@
 <aside id="moves">
   <h2>MOVES</h2>
   <p>Pick a move, then press SPACE. The rueda dances it from the next 1.</p>
+  <h3 id="avail"></h3>
   <ol></ol>
   <div class="keys"><b>SPACE</b> call it · <b>▲ ▼</b> or <b>0-9</b> pick · <b>◄ ►</b> lead/follow · <b>S</b> ½× speed · <b>M</b> mute · <b>T</b> tune</div>
 </aside>

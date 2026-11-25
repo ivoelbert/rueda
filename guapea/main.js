@@ -56,6 +56,7 @@ const P = Object.fromEntries(Object.entries(SPEC).map(([k, [d, lo, hi]]) => [k, 
 // t runs 0..8 over the eight counts (count 1 at t = 0). Keys are
 // [beat, value]: the value is reached on that beat. "O" is the foot on the
 // outside of the circle (his left, her right), "I" the inside one.
+const DIST = 19; // partners' pelvises apart in the open position
 const PELVIS = [[0, -1], [1, -0.35], [2, 0], [4, 1], [5, 0.35], [6, 0]];
 const HIPS = [[0, 1], [1, -1], [2, 1], [3, 1.6], [4, -1], [5, 1], [6, -1], [7, -1.6]]; // toward the weighted foot, popping on 4 and 8
 const ANGLE = [[2, 0], [4, 1], [6, 0]]; // he angles to his right on the forward rock
@@ -71,9 +72,13 @@ const HIS_FLOURISH = [[0.5, 0.7], [2.4, 0]]; // his opens to the inside
 const FOOT_I_F = FOOT_I.map(([b, f, , lift]) => [b, f, 0, lift]); // she doesn't angle
 
 // A figure gives each role its tracks for one 8-count measure:
-//   root    [beat, along, out, turn]: where the body travels. along counts
-//           places around the circle (+ = counterclockwise), out is px away
-//           from the center, turn is degrees (+ = left). Keys run 0 to 8;
+//   root    [beat, along, out, turn, aim]: where the body travels. along
+//           counts places around the circle (+ = counterclockwise), out is
+//           px away from the center, turn is degrees (+ = left). A heading
+//           turns with the place the body is on; aim, if given, turns it
+//           further by that many places' worth, whatever the number of
+//           couples, so partners off their own places can face each other.
+//           Keys run 0 to 8;
 //           a move can start at -2 to prepare on the 7 and 8 before it
 //           (the call comes on 5).
 //   pelvis, angle, hips: as in the guapea.
@@ -392,6 +397,58 @@ const PELOTA4_TURN = {
   lead: { root: quarters(ENCHUFLA.lead.root.at(-1).slice(1)), pelvis: [[0, 0]], angle: [[0, 0]], hips: TURN_HIPS, ...TURN_STEPS('O', 'I') },
   follow: { root: quarters(ENCHUFLA.follow.root.at(-1).slice(1)), pelvis: [[0, 0]], angle: [[0, 0]], hips: TURN_HIPS.map(([b, v]) => [b, -v]), ...TURN_STEPS('I', 'O') },
 };
+// Arriba: a dile que si into the closed hold, then the couples walk round the
+// circle in it, bar after bar (loop), until the dile que no. In places along
+// the circle: OPEN is half the distance between partners in the guapea,
+// CLOSED in the closed hold. Off their own places they face each other by
+// aiming (root) back to the middle between them. In the hold she is a little
+// to his right (SIDE px, outside the circle).
+const OPEN = DIST / 2 / (DIST + 24), CLOSED = 5 / (DIST + 24), SIDE = 1.2;
+// Steps on 1-2-3 and 5-6-7, his left foot first and her right, each landing
+// f steps on from under the body (ahead of him, behind her), so the body
+// doesn't drag the planted foot along before it lifts.
+const walkSteps = (f) => ({ O: [[0, f, 0, 2.6], [2, f, 0, 2.6], [5, f, 0, 2.6]], I: [[1, f, 0, 2.6], [4, f, 0, 2.6], [6, f, 0, 2.6]] });
+// The dile que si's half turn: the couple pivots round the middle between
+// them, to his right, [beat, degrees turned, half the distance between them],
+// so he goes round the outside of the circle and she round the inside, and
+// they end swapped, in line, him facing South.
+const PIVOT = [[2, 0, OPEN - 0.01], [3, 8, OPEN - 0.04], [4, 40, 0.165], [5, 105, 0.135], [6, 160, CLOSED + 0.005], [7, 180, CLOSED], [8, 180, CLOSED]];
+const pivot = (lead) => PIVOT.map(([b, a, r]) => {
+  const off = OPEN - r * Math.cos(a * DEG), side = SIDE * smooth(clamp((a - 90) / 90, 0, 1)) * (lead ? -1 : 1);
+  return [b, lead ? -off : off, (lead ? 1 : -1) * r * (DIST + 24) * Math.sin(a * DEG) + side, -a, lead ? off : -off];
+});
+// On 1-2-3 a short extension: they lean away from each other on 1, the
+// joined hands down and out, and come back on 2-3. On 5-6-7 they turn half
+// round together into the closed hold (closed: the window it comes on in):
+// his right hand on her back, her left on his shoulder, the joined hands at
+// head height.
+const DILE_QUE_SI_STEPS = { pelvis: [[0, -1], [1, -0.35], [2, 0], [4, 0.2], [6, 0]], angle: [[0, 0]], O: [[0, -1, 0, 2.6], [2, 0, 0, 2.2], [5, 0, 0, 2.6]], I: [[1, 0, 0, 1.6], [4, 0, 0, 2.6], [6, 0, 0, 2.4]] };
+const DILE_QUE_SI = {
+  shift: 0, whoosh: [4], closed: [3.4, 6.4],
+  lead: { ...DILE_QUE_SI_STEPS, root: [[0, 0, 0, 0], [0.7, 0.03, 0, 0], ...pivot(true)] },
+  follow: { ...DILE_QUE_SI_STEPS, root: [[0, 0, 0, 0], [0.7, -0.03, 0, 0], ...pivot(false)] },
+};
+// Walking arriba: he walks forward and she backward, one place round the
+// circle a bar (travel), everyone at once. The joined hands pump (pump: up on
+// 1, down on 2, up on 3, down on 5, up on 6, down on 7), each one's shoulder
+// on that side going with them. The body glides on each step and rests on
+// the 4 and the 8.
+const WALK = [[0, 0], [1, 1.3], [2, 2.3], [3, 3], [4, 3], [5, 4.3], [6, 5.3], [7, 6], [8, 6]];
+const walk = (lead) => WALK.map(([b, x]) => [b, (lead ? -1 : 1) * (OPEN + CLOSED) + x / 6, lead ? -SIDE : SIDE, -180, (lead ? 1 : -1) * (OPEN + CLOSED)]);
+const ARRIBA = {
+  shift: 0, travel: 1, flow: true, closed: true, pump: [[0, 1], [1, 0], [2, 1], [4, 0], [5, 1], [6, 0]],
+  lead: { root: walk(true), pelvis: [[0, 0]], angle: [[0, 0]], ...walkSteps(0.25) },
+  follow: { root: walk(false), pelvis: [[0, 0]], angle: [[0, 0]], ...walkSteps(-0.25) },
+};
+// The dile que no out of arriba: the setenta's, from the closed hold
+// (fromArriba). On 1-2-3 he rocks back, turning a little to his left, and on
+// 5-6-7 she crosses in front of him while he turns half round to his left,
+// back in the guapea with the same partner, where they walked to.
+const ARRIBA_DILE = {
+  ...SETENTA_DILE, fromHats: true, fromArriba: true,
+  lead: { ...SETENTA_DILE.lead, O: [[0, -0.5, 0, 2.6], ...SETENTA_DILE.lead.O.slice(1)], root: [walk(true)[0], [1, -0.32, -1.6, -158], [2, -0.29, -2.3, -136], [3, -0.26, -2.5, -116], ...SETENTA_DILE.lead.root.filter(([b]) => b >= 4)] },
+  follow: { ...SETENTA_DILE.follow, O: [[0, 0.4, 0, 2.6], ...SETENTA_DILE.follow.O.slice(1)], root: [walk(false)[0], [1, 0.37, -2.6, -186], ...SETENTA_DILE.follow.root.filter(([b]) => b >= 2)] },
+};
 const MOVES = {
   dame: {
     id: 'dame', name: 'DAME', say: '¡Dame!', bars: [DAME],
@@ -445,22 +502,65 @@ const MOVES = {
     id: 'pelota4', name: 'PELOTA DE 4', say: '¡Pelota de cuatro!', bars: [ENCHUFLA, MAMBO_ALL, PELOTA4_TURN, DAME_AFTER_ENCHUFLA],
     blurb: 'An enchufla that stops facing the next girl, a whole bar of mambo, then everyone turns once round to the left in four quarters, clapping on each: 1, 3, 5 and 7. Then a dame with her. Everyone has a new partner.',
   },
+  // from: the moves called from arriba; the rest are called from the guapea.
+  // loop: after its bars the move goes on with this figure until the next
+  // call, and to: what the rueda is doing then.
+  arriba: {
+    id: 'arriba', name: 'ARRIBA', say: '¡Arriba!', bars: [DILE_QUE_SI], loop: ARRIBA, to: 'arriba',
+    blurb: 'A dile que si: a short extension, then a half turn together into the closed hold. Then every couple walks round the circle, a place a bar, the joined hands pumping, until the next call.',
+  },
+  dilequeno: {
+    id: 'dilequeno', name: 'DILE QUE NO', say: '¡Dile que no!', bars: [ARRIBA_DILE], from: 'arriba',
+    blurb: 'Out of the closed hold: she crosses in front of him and they are back in the guapea, with the same partner, where they walked to.',
+  },
 };
 
 // The calls: measure number -> move id; the move's bars follow from that
-// measure on. Calls well behind us are folded into baseShift.
+// measure on. Calls well behind us are folded into baseShift and baseTravel.
 const timeline = new Map();
-let baseShift = 0;
-// The call dancing in measure m, and which of its bars.
+let baseShift = 0, baseTravel = 0;
+// The measure a call ends on: a move with a loop goes on until the next call.
+function endOf(k, mv) {
+  if (!mv.loop) return k + mv.bars.length;
+  let e = Infinity;
+  for (const kk of timeline.keys()) if (kk > k && kk < e) e = kk;
+  return e;
+}
+// The call dancing in measure m, and which of its bars (loop: in its loop).
 function callAt(m) {
-  for (const [k, id] of timeline) if (m >= k && m < k + MOVES[id].bars.length) return { id, bar: m - k };
+  for (const [k, id] of timeline) {
+    const mv = MOVES[id];
+    if (m >= k && m < endOf(k, mv)) return { id, bar: m - k, loop: m - k >= mv.bars.length };
+  }
   return null;
 }
-const figureAt = (m) => { const c = callAt(m); return c ? MOVES[c.id].bars[c.bar] : GUAPEA; };
+const figureAt = (m) => { const c = callAt(m); return c ? (c.loop ? MOVES[c.id].loop : MOVES[c.id].bars[c.bar]) : GUAPEA; };
+// What a call's figures add up to (key: shift, how many places the girls
+// have moved on clockwise; travel, how many places the couples have walked
+// counterclockwise) before measure m.
+function sumOf(k, id, m, key) {
+  const mv = MOVES[id], end = Math.min(m, endOf(k, mv));
+  let s = 0;
+  mv.bars.forEach((f, j) => { if (k + j < end) s += f[key] ?? 0; });
+  if (end > k + mv.bars.length) s += (end - k - mv.bars.length) * (mv.loop[key] ?? 0);
+  return s;
+}
 function shiftBefore(m) {
   let s = baseShift;
-  for (const [k, id] of timeline) MOVES[id].bars.forEach((f, j) => { if (k + j < m) s += f.shift; });
+  for (const [k, id] of timeline) s += sumOf(k, id, m, 'shift');
   return s;
+}
+function travelBefore(m) {
+  let s = baseTravel;
+  for (const [k, id] of timeline) s += sumOf(k, id, m, 'travel');
+  return s;
+}
+// What the rueda is doing between moves at measure m: the guapea, or arriba
+// once it is called and until the dile que no.
+function stateAt(m) {
+  let last = -Infinity, id = null;
+  for (const [k, i] of timeline) if (k < m && k > last) { last = k; id = i; }
+  return (id && MOVES[id].to) || 'guapea';
 }
 
 // One track's keys for the measures around beat b, on the absolute beat line,
@@ -481,9 +581,10 @@ function evalRoot(keys, t) {
   let i = 0;
   while (i < keys.length - 2 && t > keys[i + 1][0]) i++;
   const a = keys[i], b = keys[i + 1], h = b[0] - a[0], u = clamp((t - a[0]) / h, 0, 1);
-  const tan = (j, c) => (j <= 0 || j >= keys.length - 1 ? 0 : ((keys[j + 1][c] - keys[j - 1][c]) / (keys[j + 1][0] - keys[j - 1][0])) * 0.85);
+  const v = (k, c) => k[c] ?? 0; // aim is optional
+  const tan = (j, c) => (j <= 0 || j >= keys.length - 1 ? 0 : ((v(keys[j + 1], c) - v(keys[j - 1], c)) / (keys[j + 1][0] - keys[j - 1][0])) * 0.85);
   const u2 = u * u, u3 = u2 * u;
-  return [1, 2, 3].map((c) => (2 * u3 - 3 * u2 + 1) * a[c] + (u3 - 2 * u2 + u) * h * tan(i, c) + (3 * u2 - 2 * u3) * b[c] + (u3 - u2) * h * tan(i + 1, c));
+  return [1, 2, 3, 4].map((c) => (2 * u3 - 3 * u2 + 1) * v(a, c) + (u3 - 2 * u2 + u) * h * tan(i, c) + (3 * u2 - 2 * u3) * v(b, c) + (u3 - u2) * h * tan(i + 1, c));
 }
 const ramp = (t, a, b) => smooth(clamp((t - a) / (b - a), 0, 1));
 const bump = (t, a, b, c) => ramp(t, a, b) * (1 - ramp(t, b, c));
@@ -542,7 +643,6 @@ const FLOWER = ['#f6efe0', '#f05060'];
 const EYE = '#1a0e14', MOUTH = '#8a2a30', TRIM = '#f6efe0';
 const spr = new Sprites(W, H, [SKIN, HAIR, SHIRT, PANTS, DRESS, [HAT], [BAND], [SHOES], [HEELS], [FLOWER], [[EYE, MOUTH, TRIM]]].flat(3), { outline: OUTLINE, shade: 1, line: 1 });
 
-const DIST = 19; // partners' pelvises apart in the open position
 const ARM = [6.8, 6.6], THIGH = 6.4, SHIN = 6.2, HEAD_R = 5.8;
 const FRONT = (225 * Math.PI) / 180; // the couple nearest the camera, seen side-on
 // Leads and follows are listed separately because partners change: at
@@ -556,7 +656,7 @@ function build() {
   R = (n * (DIST + 24)) / TAU;
   SLOT = TAU / n;
   leads = []; follows = [];
-  timeline.clear(); baseShift = 0;
+  timeline.clear(); baseShift = 0; baseTravel = 0;
   for (let k = 0; k < n; k++) {
     const a = FRONT + k * SLOT;
     const c = { x: R * Math.cos(a), y: R * Math.sin(a) }, t = { x: -Math.sin(a), y: Math.cos(a) };
@@ -586,21 +686,22 @@ function build() {
 function rootKeys(d, m) {
   const fig = figureAt(m), prev = figureAt(m - 1), next = figureAt(m + 1);
   // Another figure's keys on this measure's beats; a follow's along restarts
-  // from her new home after a partner change.
-  const moved = (f, dt, da) => f[d.role].root.map(([t, along, ...rest]) => [t + dt, along + (d.lead ? 0 : da), ...rest]);
-  return [...(fig.flow ? moved(prev, -8, prev.shift).slice(0, -1) : []), ...fig[d.role].root, ...(next.flow ? moved(next, 8, -fig.shift).slice(1) : [])];
+  // from her new home after a partner change, and everyone's from where the
+  // couples have walked to.
+  const moved = (f, dt, da, dw) => f[d.role].root.map(([t, along, ...rest]) => [t + dt, along + (d.lead ? 0 : da) + dw, ...rest]);
+  return [...(fig.flow ? moved(prev, -8, prev.shift, -(prev.travel ?? 0)).slice(0, -1) : []), ...fig[d.role].root, ...(next.flow ? moved(next, 8, -fig.shift, fig.travel ?? 0).slice(1) : [])];
 }
 
 // Where a dancer's body is at beat b: a spot on the floor and a heading. The
 // leads keep their places; a follow's home spot moves on one place clockwise
-// per partner change.
+// per partner change. Walking arriba moves everyone's on counterclockwise.
 function root(d, b) {
   let m = Math.floor(b / 8);
   if (b - (m + 1) * 8 >= figureAt(m + 1)[d.role].root[0][0]) m++; // the next move's preparation
-  const [along, out, turn] = evalRoot(rootKeys(d, m), b - m * 8);
-  const a = ((d.lead ? 0 : -shiftBefore(m)) + along) * SLOT, c = Math.cos(a), s = Math.sin(a);
+  const [along, out, turn, aim] = evalRoot(rootKeys(d, m), b - m * 8);
+  const a = ((d.lead ? 0 : -shiftBefore(m)) + travelBefore(m) + along) * SLOT, c = Math.cos(a), s = Math.sin(a);
   const x = d.home.x * c - d.home.y * s, y = d.home.x * s + d.home.y * c, r = Math.hypot(x, y);
-  const h = d.h0 + a + turn * DEG;
+  const h = d.h0 + a + turn * DEG + aim * SLOT;
   return { x: x + (x / r) * out, y: y + (y / r) * out, h, f: { x: Math.cos(h), y: Math.sin(h) }, l: { x: -Math.sin(h), y: Math.cos(h) } };
 }
 
@@ -677,6 +778,12 @@ function crossGrip(L, F, t) {
   const m = mix(L.shO, F.shO, 0.5), o = norm(v3(m.x, m.y, 0));
   const z = 13 - (L.dp + F.dp) / 2 + 3.5 * bump(t, 4.6, 5.3, 6) * P.arms;
   return reachable(v3(m.x - o.x * 3, m.y - o.y * 3, z), L.shO, F.shO);
+}
+// The closed hold's joined hands (his left, her right): out on his left side at
+// about head height, pumped up (u = 1) and down (u = 0).
+function closedGrip(L, F, u) {
+  const m = mix(L.shO, F.shO, 0.5), z = (L.head.z + F.head.z) / 2 - 4.5 + 10 * u * P.arms;
+  return reachable(v3(m.x + L.l.x * 2.5, m.y + L.l.y * 2.5, z), L.shO, F.shO);
 }
 // Free hands: bent at the elbow in front of the chest, swinging against the step.
 const rest = (B, side) => B.Lw(B.nf + 3.4 - B.pf * 0.35, B.ns + side * (B.d.shW - 1.2), B.nz - (B.d.lead ? 5.2 : 4.4));
@@ -886,6 +993,27 @@ function hands(b) {
     for (const d of dancers()) aim(d.pose, rest(d.pose, d.sO), rest(d.pose, -d.sO));
     return;
   }
+  if (fig.closed) {
+    // Arriba. In the dile que si the joined hands go from the guapea's grip up
+    // to the closed hold's, his right hand to her back and her left up over
+    // his arm onto his shoulder (closed: the window [from, by] they do it
+    // in). Walking, they pump (pump: the figures' keys, read across the bar
+    // lines so the first pump starts on the 8 before), and each one's
+    // shoulder on that side goes up with them, the other a little down.
+    const hold = fig.closed === true ? 1 : ramp(t, ...fig.closed), keys = [];
+    for (let mm = m - 1; mm <= m + 1; mm++) for (const [c, v] of figureAt(mm).pump ?? [[0, 0]]) keys.push([mm * 8 + c, v]);
+    const a = activeAbs(keys, b, 0.4, 0.2), pump = lerp(a.prev[1], a.k[1], inOut(a.u));
+    for (let i = 0; i < n; i++) {
+      const L = leads[i].pose, F = follows[mod(i + s, n)].pose;
+      for (const B of [L, F]) { B.shO = add(B.shO, v3(0, 0, 1.4 * pump)); B.shI = add(B.shI, v3(0, 0, -0.6 * pump)); }
+      const j = mix(guapeaGrip(L, F, t), closedGrip(L, F, pump), hold);
+      aim(L, j, mix(styled(L, t), herBack(F), hold));
+      aim(F, j, add(mix(styled(F, t), hisBack(L), hold), v3(0, 0, 5 * Math.sin(Math.PI * hold))));
+      L.around = { I: { on: F, w: hold, side: v3(F.l.x, F.l.y, -0.3) } }; // around her left side
+      F.around = { I: { on: L, w: hold, side: v3(-L.l.x, -L.l.y, 0.2) } }; // over his right shoulder
+    }
+    return;
+  }
   if (fig.over) {
     // Turns under the arm: for each turn his left hand takes her right over
     // her head and brings it down after. In the doble his right hand stops
@@ -930,7 +1058,8 @@ function hands(b) {
   // already in the hold from the coronación (fig.fromHats). With his own
   // partner her arm doesn't go up and the free hands go straight to each
   // other's backs, without the styling. After the setenta his left hand
-  // keeps hers throughout (fig.held).
+  // keeps hers throughout (fig.held), and out of arriba from the closed
+  // hold (fig.fromArriba).
   const hats = !!fig.fromHats, nn = fig.dile ? 0 : 1, own = (B) => (fig.dile ? rest(B, -B.d.sO) : styled(B, t));
   const wOld = fig.free ? 0 : fig.held ? 1 : 1 - ramp(t, 0, 0.35), release = ramp(t, 4.4, 5);
   const wBack = (hats ? 1 : fig.held ? ramp(t, 0.6, 1.5) : ramp(t, 0.3, 0.7)) * (1 - release), up = hats || fig.dile ? 0 : ramp(t, 0, 0.3), hold = hats ? 1 : ramp(t, 1, 2);
@@ -938,7 +1067,7 @@ function hands(b) {
   const old = [], neu = [];
   for (let i = 0; i < n; i++) {
     const L = leads[i].pose, Fo = follows[mod(i + s, n)].pose, Fn = follows[mod(i + s + nn, n)].pose;
-    old[i] = fig.held ? straight(L, Fo).O : guapeaGrip(L, Fo, t);
+    old[i] = fig.fromArriba ? closedGrip(L, Fo, 0) : fig.held ? straight(L, Fo).O : guapeaGrip(L, Fo, t);
     neu[i] = lifted(mix(crossGrip(L, Fn, t), guapeaGrip(L, Fn, t), toGuapea), L, Fn, prep);
     aim(L, mix(mix(rest(L, L.d.sO), old[i], wOld), neu[i], wNew), mix(own(L), herBack(Fn), wBack));
     L.around = { I: { on: Fn, w: wBack, side: v3(Fn.l.x, Fn.l.y, -0.3) } }; // around her left side
@@ -1237,8 +1366,9 @@ function call() {
   const b = music.beat();
   let m = Math.floor((b + early) / 8) + 1;
   const running = callAt(m);
-  if (running?.bar > 0) m += MOVES[running.id].bars.length - running.bar;
-  if (mv.bars.some((_, j) => callAt(m + j))) return music.sfx('nope');
+  if (running?.bar > 0 && !running.loop) m += MOVES[running.id].bars.length - running.bar;
+  // A loop (arriba) goes on only until the next call.
+  if (mv.bars.some((_, j) => callAt(m + j) && !callAt(m + j).loop) || (mv.from ?? 'guapea') !== stateAt(m)) return music.sfx('nope');
   timeline.set(m, state.move);
   state.calledAt = b;
   music.sfx('select');
@@ -1279,11 +1409,15 @@ function poseAll(b, dt) {
   for (const d of dancers()) { reach(d.pose); spring(d, d.pose, dt); }
 }
 
-// Calls well behind us only matter for who dances with whom.
+// Calls well behind us only matter for who dances with whom, and where. In
+// order, since a loop ends where the next call starts.
 function fold(b) {
   const m = Math.floor(b / 8);
-  for (const [k, id] of timeline) if (k + MOVES[id].bars.length <= m - 3) {
-    for (const f of MOVES[id].bars) baseShift += f.shift;
+  for (const k of [...timeline.keys()].sort((x, y) => x - y)) {
+    const id = timeline.get(k);
+    if (endOf(k, MOVES[id]) > m - 3) break;
+    baseShift += sumOf(k, id, Infinity, 'shift');
+    baseTravel += sumOf(k, id, Infinity, 'travel');
     timeline.delete(k);
   }
 }
@@ -1445,7 +1579,7 @@ function hud(b, t, cnt) {
   }
   drawText(ctx, `1P ${state.role === 'lead' ? 'LEAD' : 'FOLLOW'}`, 8, H - 20, GOLD[2], 1, OUTLINE);
   drawText(ctx, state.half ? '½× PRÁCTICA' : '', 8, H - 10, '#a8e878', 1, OUTLINE);
-  const idle = !next && !now && b - Math.max(state.calledAt, state.startedAt) > 12;
+  const idle = !next && (!now || now.loop) && b - Math.max(state.calledAt, state.startedAt) > 12;
   if (idle && Math.floor(b * 2) % 2 === 0) centerText(ctx, `SPACE: CALL ¡${MOVES[state.move].name}!`, H - 33, CREAM, 1, OUTLINE);
   if (b - state.startedAt < 4 && b - state.startedAt >= 0) centerText(ctx, '¡A BAILAR!', 12, GOLD, 4, OUTLINE, { shadow: OUTLINE });
 }
@@ -1465,17 +1599,35 @@ function title(b) {
 
 // ------------------------------------------------------------ moves library
 const lib = document.getElementById('moves');
-let libKey = '', libMove = '';
-function buildLibrary() {
+let libKey = '', libMove = '', libState = '';
+// The list shows only the moves that can be called next: from the guapea, or
+// from arriba. Each keeps its own pick, so after a dile que no the pick from
+// before arriba is back.
+const picks = {};
+const available = (st) => Object.values(MOVES).filter((mv) => (mv.from ?? 'guapea') === st).map((mv) => mv.id);
+// What the next call would start from: what the rueda does once the move
+// dancing now, or called for the next 1, is done.
+function nextState(b) {
+  let m = Math.floor(b / 8) + 1;
+  const c = callAt(m);
+  if (c && !c.loop) m += MOVES[c.id].bars.length - c.bar;
+  return stateAt(m);
+}
+function buildLibrary(st) {
+  if (libState) picks[libState] = state.move;
+  libState = st;
+  const ids = available(st);
+  state.move = ids.includes(picks[st]) ? picks[st] : ids.includes(state.move) ? state.move : ids[0];
+  lib.querySelector('#avail').textContent = `${st === 'arriba' ? 'Arriba' : 'Guapea'} – available moves`;
   const list = lib.querySelector('ol');
   list.innerHTML = '';
-  Object.values(MOVES).forEach((mv, i) => {
+  ids.map((id) => MOVES[id]).forEach((mv, i) => {
     const li = document.createElement('li');
     li.innerHTML = `<button type="button" data-move="${mv.id}"><kbd${i < 10 ? '' : ' class="none"'}>${i < 10 ? (i + 1) % 10 : '&nbsp;'}</kbd><b>${mv.name}</b><i></i><small>${mv.blurb}</small></button>`;
     li.querySelector('button').addEventListener('click', (e) => { e.currentTarget.blur(); select(mv.id); });
     list.appendChild(li);
   });
-  libKey = '';
+  libKey = ''; libMove = '';
 }
 function select(id) {
   if (id !== state.move) music.sfx('select');
@@ -1483,6 +1635,8 @@ function select(id) {
 }
 // Marks the selected move, and the one dancing now or next.
 function syncLibrary(b) {
+  const st = nextState(b);
+  if (st !== libState) buildLibrary(st);
   const m = Math.floor(b / 8), now = callAt(m)?.id, next = timeline.get(m + 1), key = `${state.move}|${now}|${next}`;
   if (key === libKey) return;
   libKey = key;
@@ -1499,7 +1653,7 @@ function syncLibrary(b) {
 function setRole(role) { state.role = role; }
 addEventListener('keydown', (e) => {
   if (e.repeat || e.metaKey || e.ctrlKey || e.altKey || e.target.tagName === 'INPUT') return;
-  const k = e.code, ids = Object.keys(MOVES);
+  const k = e.code, ids = available(libState);
   if (k === 'Space' || k === 'Enter' || k === 'KeyZ') { e.preventDefault(); call(); }
   else if (k === 'ArrowLeft' || k === 'KeyA') setRole('lead');
   else if (k === 'ArrowRight' || k === 'KeyD') setRole('follow');
@@ -1571,10 +1725,20 @@ function fit() {
 addEventListener('resize', fit);
 
 build();
-if (q.has('call')) timeline.set(1, MOVES[q.get('call')] ? q.get('call') : state.move);
+// ?call=enchufla, or several calls: ?call=arriba,dilequeno@5 (each one from
+// the given measure, or right after the one before).
+if (q.has('call')) {
+  let at = 1;
+  for (const c of q.get('call').split(',')) {
+    const [id, from] = c.split('@'), mv = MOVES[id] ? id : state.move;
+    if (from) at = +from;
+    timeline.set(at, mv);
+    at += MOVES[mv].bars.length;
+  }
+}
 buildPlaza();
 buildPanel();
-buildLibrary();
+buildLibrary(nextState(beatNow()));
 fit();
 window.rueda = { P, state, music, timeline, leads: () => leads, follows: () => follows, seek: (b) => { frozen = b; }, call };
 requestAnimationFrame(frame);
