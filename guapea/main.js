@@ -354,18 +354,43 @@ const PELOTA_OUT = {
 // the same way. On 1 everyone taps the left foot forward on the toes (heel:
 // the heel stays up), on 2 brings it back, taps the right on 3 and brings it
 // back on 4, the hips going over the standing foot, and the hand on the
-// other side reaches forward with each tap (mamboHands). On 5-6-7-8 the feet
-// go on and everyone claps on 5 and 7. Then the dame takes her from there.
+// other side reaches forward with each tap. On 5-6-7-8 the feet go on and
+// everyone claps on 5 and 7. Then the dame takes her from there. shine: the
+// hands are free, and on these counts the hand on the other side reaches
+// forward with the tap (shineHands).
 const MAMBO_TAPS = (first, second) => ({
   [first]: [[0, 0.7, 0, 1.4, 1.5], [1, 0, 0, 1.2], [4, 0.7, 0, 1.4, 1.5], [5, 0, 0, 1.2]],
   [second]: [[2, 0.7, 0, 1.4, 1.5], [3, 0, 0, 1.2], [6, 0.7, 0, 1.4, 1.5], [7, 0, 0, 1.2]],
 });
 const MAMBO_HIPS = [[0, -1.4], [1, 0.8], [2, 1.4], [3, -0.8], [4, -1.4], [5, 0.8], [6, 1.4], [7, -0.8]]; // his; O is his left foot
 const stay = (k) => [[0, ...k], [7, ...k], [8, ...k]];
-const MAMBO = {
-  shift: 0, mambo: true, claps: [4, 6],
+const MAMBO_ALL = {
+  shift: 0, shine: [0, 2, 4, 6],
   lead: { root: stay(ENCHUFLA.lead.root.at(-1).slice(1)), pelvis: [[0, 0]], angle: [[0, 0]], hips: MAMBO_HIPS, ...MAMBO_TAPS('O', 'I') },
   follow: { root: stay(ENCHUFLA.follow.root.at(-1).slice(1)), pelvis: [[0, 0]], angle: [[0, 0]], hips: MAMBO_HIPS.map(([b, v]) => [b, -v]), ...MAMBO_TAPS('I', 'O') },
+};
+const MAMBO = { ...MAMBO_ALL, shine: [0, 2], claps: [4, 6] };
+// Pelota de 4: the enchufla, a whole bar of mambo, then everyone turns once
+// round to the left in place, a quarter turn landing with a clap on each of
+// 1, 3, 5 and 7: the left foot steps round with the turn and the right
+// closes after it. On 7 they face each other again, and the dame takes her
+// from there.
+// Each quarter turn snaps round over the half beat before its count and
+// holds still until the next one.
+function quarters([along, out, turn]) {
+  const k = [];
+  for (const c of [0, 2, 4, 6]) {
+    const from = turn - 360 + 45 * c;
+    k.push([c - 0.55, along, out, from], [c - 0.45, along, out, from], [c, along, out, from + 90], [c + 0.3, along, out, from + 90]);
+  }
+  return [...k, [7, along, out, turn], [8, along, out, turn]];
+}
+const TURN_STEPS = (left, right) => ({ [left]: [0, 2, 4, 6].map((c) => [c, 0, 0, 2.2]), [right]: [0, 2, 4, 6].map((c) => [c + 0.5, 0, 0, 1.2]) });
+const TURN_HIPS = [0, 2, 4, 6].flatMap((c) => [[c, 1], [c + 1, 0]]); // his, over the left foot as it lands
+const PELOTA4_TURN = {
+  shift: 0, shine: [], claps: [0, 2, 4, 6],
+  lead: { root: quarters(ENCHUFLA.lead.root.at(-1).slice(1)), pelvis: [[0, 0]], angle: [[0, 0]], hips: TURN_HIPS, ...TURN_STEPS('O', 'I') },
+  follow: { root: quarters(ENCHUFLA.follow.root.at(-1).slice(1)), pelvis: [[0, 0]], angle: [[0, 0]], hips: TURN_HIPS.map(([b, v]) => [b, -v]), ...TURN_STEPS('I', 'O') },
 };
 const MOVES = {
   dame: {
@@ -415,6 +440,10 @@ const MOVES = {
   dobleplay: {
     id: 'dobleplay', name: 'DOBLE PLAY CON MAMBO', say: '¡Doble play con mambo!', bars: [ENCHUFLA, MAMBO, DAME_AFTER_ENCHUFLA],
     blurb: 'An enchufla that stops facing the next girl for the mambo: everyone taps the left foot, then the right, the other hand reaching forward, and claps on 5 and 7 as the feet keep going. Then a dame with her. Everyone has a new partner.',
+  },
+  pelota4: {
+    id: 'pelota4', name: 'PELOTA DE 4', say: '¡Pelota de cuatro!', bars: [ENCHUFLA, MAMBO_ALL, PELOTA4_TURN, DAME_AFTER_ENCHUFLA],
+    blurb: 'An enchufla that stops facing the next girl, a whole bar of mambo, then everyone turns once round to the left in four quarters, clapping on each: 1, 3, 5 and 7. Then a dame with her. Everyone has a new partner.',
   },
 };
 
@@ -852,8 +881,8 @@ function hands(b) {
     }
     return;
   }
-  if (fig.mambo) {
-    // The mambo's hands are free (mamboHands reaches them forward).
+  if (fig.shine) {
+    // A shine's hands are free (shineHands reaches them forward).
     for (const d of dancers()) aim(d.pose, rest(d.pose, d.sO), rest(d.pose, -d.sO));
     return;
   }
@@ -938,14 +967,14 @@ function crossPrep(b) {
   }
 }
 
-// The mambo (fig.mambo): with each tap the hand on the other side reaches a
-// little forward, the right with the left foot on 1 and the left with the
-// right on 3, and comes back with the foot on 2 and 4. It reads the next
+// The mambo (fig.shine): with each tap the hand on the other side reaches a
+// little forward, the right with the left foot on 1 and 5 and the left with
+// the right on 3 and 7, and comes back with the foot. It reads the next
 // measure too, so the hand is on its way out on the 8 before.
-function mamboHands(b) {
+function shineHands(b) {
   const m = Math.floor(b / 8);
-  for (let mm = m; mm <= m + 1; mm++) if (figureAt(mm).mambo) for (const [c, side] of [[0, -1], [2, 1]]) {
-    const at = mm * 8 + c, w = bump(b, at - 0.45, at, at + 1);
+  for (let mm = m; mm <= m + 1; mm++) for (const c of figureAt(mm).shine ?? []) {
+    const at = mm * 8 + c, w = bump(b, at - 0.45, at, at + 1), side = c % 4 ? 1 : -1;
     if (w > 0) for (const d of dancers()) {
       const B = d.pose, n = side === d.sO ? 'O' : 'I';
       B.aim[n] = mix(B.aim[n], B.Lw(B.nf + 7.5, B.ns + side * (d.shW - 0.8), B.nz - 3), w);
@@ -1245,7 +1274,7 @@ function poseAll(b, dt) {
   for (const d of dancers()) d.pose = body(d, b);
   hands(b);
   crossPrep(b);
-  mamboHands(b);
+  shineHands(b);
   clapHands(b);
   for (const d of dancers()) { reach(d.pose); spring(d, d.pose, dt); }
 }
