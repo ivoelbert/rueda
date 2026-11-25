@@ -313,6 +313,41 @@ const ENCHUFLA_AFTER_DOBLE = { ...ENCHUFLA, lead: wound(ENCHUFLA.lead, 25), foll
 const PELOTA_1 = { ...ENCHUFLA, claps: [6] };
 const PELOTA_2 = { ...ENCHUFLA, claps: [6, 7] };
 const DAME_CLAP = { ...DAME_AFTER_ENCHUFLA, claps: [0] };
+// The pelota: her right hand is held throughout (pelota), by his left (hand:
+// 'L') or his right ('R'), passed from one of his hands to the other over
+// swap. The couple keeps going round each other clockwise: each enchufla
+// swaps their places and carries on a quarter further, and nothing stops on
+// the 4 or the 8.
+//
+// First bar: an enchufla without letting go, and on 5-6-7 they carry on round
+// so he ends a step inside the circle facing out and she a step outside
+// facing in. On 6-7 his right takes her right from his left.
+const PELOTA_IN = {
+  shift: 0, whoosh: [1], lift: true, pelota: true, fromGuapea: true, hand: 'L', swap: [5.4, 6.6], over: [0, 0.6, 2, 3], golpe: [6.6, 8, 9, 10.6],
+  lead: { ...ENCHUFLA_STEPS, root: [[-2, 0, 0, 0], [-1, -0.015, 0, 6], [0, 0, 0.5, 15], [1, -0.2, 5.5, -80], [2, -0.42, 2, -165], [3, -0.45, -0.8, -185], [4, -0.421, -4, -205], [5, -0.368, -7.5, -230], [6, -0.286, -9.2, -253], [7, -0.221, -9.5, -268], [8, -0.221, -13, -155]] },
+  follow: { ...ENCHUFLA_STEPS, root: [[-2, 0, 0, 0], [-1, 0.015, 0, -6], [0, 0, 0.5, -15], [1, 0.22, -5.5, 85], [2, 0.43, -1.5, 170], [3, 0.46, 0.8, 186], [4, 0.433, 4.2, 165], [5, 0.368, 7.5, 140], [6, 0.286, 9.2, 115], [7, 0.221, 9.5, 92], [8, 0.221, 13, 205]] },
+};
+// Second bar. On 8-1 the golpe (golpe: the window, running on from the bar
+// before): both turn to their left, past side by side, stepping a little
+// apart, so they look opposite ways with the joined right arms stretched
+// between them; his free arm stretches out to the center and hers away from
+// it, and their heads follow their hands. On 2-3 they come back to face each
+// other and a little closer, and on 5-6-7 she turns once to her right under
+// the hands while he turns once to his left (both: the hands over both
+// heads). Back to back, his left takes her right from his right.
+const PELOTA_GOLPE = {
+  shift: 0, whoosh: [0, 4], flow: true, pelota: true, hand: 'R', swap: [4.6, 5.6], both: true, over: [2.2, 3.2, 6.2, 7.2], golpe: [-1.4, 0, 1, 2.6],
+  lead: { ...ENCHUFLA_STEPS, root: [[0, -0.221, -13, -155], [1, -0.221, -12, -205], [2, -0.221, -9, -250], [3, -0.221, -7, -272], [4, -0.221, -6.5, -195], [5, -0.221, -6.5, -100], [6, -0.221, -7, -10], [7, -0.221, -8.5, 70], [8, -0.221, -9.5, 100]] },
+  follow: { ...ENCHUFLA_STEPS, root: [[0, 0.221, 13, 205], [1, 0.221, 12, 160], [2, 0.221, 9, 115], [3, 0.221, 7, 70], [4, 0.221, 6.5, -10], [5, 0.221, 6.5, -100], [6, 0.221, 7, -190], [7, 0.221, 8.5, -260], [8, 0.221, 9.5, -280]] },
+};
+// Third bar: the enchufla back, his left holding her right, and on 5-6-7 a
+// quarter further round, so they are back in line with the circle, swapped,
+// as at the end of the setenta, and walk straight on into its dile que no.
+const PELOTA_OUT = {
+  shift: 0, whoosh: [1], flow: true, pelota: true, hand: 'L', over: [0, 0.6, 2, 3],
+  lead: { ...ENCHUFLA_STEPS, root: [[0, -0.221, -9.5, 100], [1, -0.093, -0.9, 10], [2, -0.174, 8.6, -75], [3, -0.24, 9.8, -95], [4, -0.331, 8.2, -120], [5, -0.402, 5.4, -145], [6, -0.426, 0.8, -160], [7, -0.407, -1.2, -165], [8, -0.4, -1.6, -165]] },
+  follow: { ...ENCHUFLA_STEPS, root: [[0, 0.221, 9.5, -280], [1, 0.093, 0, -185], [2, 0.186, -9, -100], [3, 0.24, -10.3, -84], [4, 0.331, -8.2, -110], [5, 0.402, -5.4, -140], [6, 0.437, -2.2, -165], [7, 0.44, -1.9, -178], [8, 0.44, -1.8, -180]] },
+};
 const MOVES = {
   dame: {
     id: 'dame', name: 'DAME', say: '¡Dame!', bars: [DAME],
@@ -353,6 +388,10 @@ const MOVES = {
   festival: {
     id: 'festival', name: 'FESTIVAL PELOTA', say: '¡Festival pelota!', bars: [PELOTA_1, DAME_AFTER_ENCHUFLA, PELOTA_2, DAME_AFTER_ENCHUFLA, PELOTA_2, DAME_CLAP],
     blurb: 'Pelota uno, dos and tres back to back: one clap, then two, then three, with a new partner each time.',
+  },
+  pelota: {
+    id: 'pelota', name: 'PELOTA', say: '¡Pelota!', bars: [PELOTA_IN, PELOTA_GOLPE, PELOTA_OUT, SETENTA_DILE, DAME],
+    blurb: 'An enchufla that takes the guys inside the circle and the girls outside. On 1 the golpe: guys point to the center, girls out. She turns, he turns, an enchufla back into line, a dile que no hands her on, then a dame. Everyone has a new partner.',
   },
 };
 
@@ -595,6 +634,9 @@ function styled(B, t) {
   return mix(p, B.Lw(B.nf + 0.8, B.ns - sO * 6.2, B.head.z + 2), clamp(track(HER_FLOURISH, t, 0.55, 0.12, inOut) * style * 0.8, 0, 1));
 }
 
+// How far to turn the head (B.yaw) to see p, at most a little past the shoulder.
+const toward = (B, p) => clamp(mod(Math.atan2(p.y - B.head.y, p.x - B.head.x) - B.h + Math.PI, TAU) - Math.PI, -1.5, 1.5);
+
 // Before an enchufla the joined hands come up between them on 7-8 instead of
 // swinging down and out for the 1.
 function lifted(j, L, F, u) {
@@ -757,13 +799,40 @@ function hands(b) {
     }
     return;
   }
+  if (fig.pelota) {
+    // The pelota: his left (hand 'L') or right ('R') holds her right, low in
+    // front between them, and over swap his other hand takes it before the
+    // first lets go. over: up over her head (both: over both heads). golpe:
+    // the joined right arms stretched between them, the free arms stretched
+    // out, his to the center and hers away from it, the heads following.
+    const over = win(fig.over), golpe = win(fig.golpe), sw = fig.swap, r0 = fig.hand === 'R' ? 1 : 0;
+    const mid = sw ? (sw[0] + sw[1]) / 2 : 0, r = sw ? lerp(r0, 1 - r0, ramp(t, sw[0], sw[1])) : r0;
+    // How much each of his hands is on hers.
+    const wR = sw ? (r0 ? 1 - ramp(t, mid, sw[1]) : ramp(t, sw[0], mid)) : r0, wL = sw ? (r0 ? ramp(t, sw[0], mid) : 1 - ramp(t, mid, sw[1])) : 1 - r0;
+    const radial = (B, k) => { const p = norm(v3(B.pelvis.x, B.pelvis.y, 0)); return v3(p.x * k, p.y * k, 1.5); };
+    for (let i = 0; i < n; i++) {
+      const L = leads[i].pose, F = follows[mod(i + s, n)].pose;
+      F.shO = add(F.shO, v3(0, 0, 2 * over)); // her shoulders lift with the arms
+      if (fig.both) { L.shI = add(L.shI, v3(0, 0, 2 * over * wR)); L.shO = add(L.shO, v3(0, 0, 2 * over * wL)); }
+      const hs = mix(L.shO, L.shI, r), m = mix(hs, F.shO, 0.5), g = mix(L.shI, F.shO, 0.5);
+      let low = v3(m.x, m.y, 13 - (L.dp + F.dp) / 2);
+      // Out of the guapea the hands start where its 7-8 lifted them.
+      if (fig.fromGuapea) low = mix(lifted(guapeaGrip(L, F, t), L, F, 1 - ramp(t, 2, 3)), low, ramp(t, 2, 3.5));
+      const heads = mix(L.head, F.head, 0.5), hers = mix(hs, F.head, 0.55);
+      const top = fig.both ? v3(heads.x, heads.y, Math.max(L.head.z, F.head.z) + 2.5) : v3(hers.x, hers.y, F.head.z + 3);
+      const grip = reachable(mix(mix(low, top, over), v3(g.x, g.y, (L.shI.z + F.shO.z) / 2 - 1), golpe), hs, F.shO);
+      const his = add(L.shO, radial(L, -12.8)), her = add(F.shI, radial(F, 12.8));
+      aim(L, mix(mix(rest(L, L.d.sO), his, golpe), grip, wL), mix(styled(L, t), grip, wR));
+      aim(F, grip, mix(styled(F, t), her, golpe));
+      if (golpe > 0) { L.yaw = toward(L, his) * golpe; F.yaw = toward(F, her) * golpe; }
+    }
+    return;
+  }
   if (fig.over) {
     // Turns under the arm: for each turn his left hand takes her right over
     // her head and brings it down after. In the doble his right hand stops
     // her by her back (hug) and her free left arm goes straight up (flair).
     const over = Math.max(...fig.over.map(win)), hug = win(fig.hug), flair = win(fig.flair), look = win(fig.look);
-    // How far to turn the head to see p, at most a little past the shoulder.
-    const toward = (B, p) => clamp(mod(Math.atan2(p.y - B.head.y, p.x - B.head.x) - B.h + Math.PI, TAU) - Math.PI, -1.5, 1.5);
     const letGo = fig.letGo ? ramp(t, ...fig.letGo) : 0, up = Math.max(1 - ramp(t, 2, 3), prep);
     for (let i = 0; i < n; i++) {
       const L = leads[i].pose, F = follows[mod(i + s, n)].pose;
