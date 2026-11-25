@@ -41,6 +41,7 @@ const rng = (seed) => () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(
 const SPEC = {
   bpm: [200, 120, 220, 1, 'Tempo (BPM)'],
   bounce: [1, 0, 2.5, 0.05, 'Knee bounce'],
+  stand: [1, 0, 1.5, 0.05, 'Straight legs'],
   hips: [1, 0, 2.5, 0.05, 'Hips'],
   step: [1, 0.3, 2, 0.05, 'Step size'],
   arms: [1, 0, 2, 0.05, 'Arm swing'],
@@ -737,6 +738,13 @@ const EYE = '#1a0e14', MOUTH = '#8a2a30', TRIM = '#f6efe0';
 const spr = new Sprites(W, H, [SKIN, HAIR, SHIRT, PANTS, DRESS, [HAT], [BAND], [SHOES], [HEELS], [FLOWER], [[EYE, MOUTH, TRIM]]].flat(3), { outline: OUTLINE, shade: 1, line: 1 });
 
 const ARM = [6.8, 6.6], THIGH = 6.4, SHIN = 6.2, HEAD_R = 5.8;
+const LEG2 = (THIGH + SHIN) ** 2 * 0.97; // the furthest a leg reaches, squared
+// Hip height above the ankles (1.3) against the leg's length is how bent the
+// knees are standing: hipZ, crouched, and STAND * P.stand higher (about 145
+// degrees at the knee). DIP: how far the knees dip on each step (dip()).
+// SINK: how far the hips may come down for a wide step.
+const STAND = 2.2, DIP = 1.3, SINK = 2.5;
+const softMin = (a, b, k) => { const h = Math.max(k - Math.abs(a - b), 0) / k; return Math.min(a, b) - (h * h * k) / 4; };
 const FRONT = (225 * Math.PI) / 180; // the couple nearest the camera, seen side-on
 // Leads and follows are listed separately because partners change: at
 // measure m, lead i dances with follow i + shiftBefore(m).
@@ -831,9 +839,7 @@ function body(d, b) {
   const pf = trk('pelvis', 0.3 + 0.4 * P.anticipation, 0.22, inOut) * S * 0.68;
   const ang = trk('angle', 0.4, 0.15, smooth) * -sO * 1.3;
   const ps = trk('hips', 0.42, 0.3, backOut) * sO * 2.2 * P.hips * d.hips * trk('sway', 0.4, 0.4, smooth) + ang;
-  const amp = 1.8 * P.bounce * d.bounce, dp = dip(t) * amp, dpLag = dip(t - 0.09) * amp;
-  const pz = d.hipZ - dp;
-  const pelvis = Lw(pf, ps, pz);
+  const amp = DIP * P.bounce * d.bounce, dp = dip(t) * amp, dpLag = dip(t - 0.09) * amp;
   // A foot lands where the body is about to be and stays there until it
   // lifts again, so traveling steps don't skate.
   // While the circle closes up or opens out it lands where the circle will
@@ -842,15 +848,28 @@ function body(d, b) {
     const r = root(d, k[0] + LOOK), s = side + k[2] * -sO, q = ringAt(k[0] + 2 * LOOK) / ringAt(k[0] + LOOK);
     return v3(q * (r.x + r.f.x * k[1] * S + r.l.x * s), q * (r.y + r.f.y * k[1] * S + r.l.y * s), 0);
   };
+  // The hips ride high, the knees only a little bent, and come down (up to
+  // SINK) only as far as a foot out in a wide step needs to reach the floor:
+  // a foot in the air hands over from where it took off to where it will
+  // land, so they start coming down as it swings out.
+  const hz = d.hipZ + STAND * P.stand - dp, low = hz - SINK;
+  const feet = [['O', sO], ['I', -sO]].map(([name, side]) => {
+    const a = stepAt(keysAround(d, name, b), b), z = Math.sin(Math.PI * a.u) * a.k[3];
+    const hip = Lw(pf, ps + side * 2.1, 0), from = landing(a.prev, side * 2.3), to = landing(a.k, side * 2.3), p = mix(from, to, a.long ? smooth(a.u) : inOut(a.u));
+    const floor = (q) => Math.max(low, 1.3 + Math.sqrt(Math.max(0, LEG2 - (q.x - hip.x) ** 2 - (q.y - hip.y) ** 2)));
+    return { name, side, a, z, p, dh: Math.hypot(p.x - hip.x, p.y - hip.y), reach: lerp(floor(from), floor(to), smooth(a.u)) };
+  });
+  const reach = Math.min(...feet.map((f) => f.reach));
+  const pz = Math.max(softMin(hz, reach, 1), low);
+  const pelvis = Lw(pf, ps, pz);
   const knee = (hip, ankle) => ik(hip, ankle, THIGH, SHIN, v3(here.f.x, here.f.y, 0.25)).mid;
   const out = { t, d, Lw, pf, ps, pz, dp, pelvis, f: here.f, l: here.l, h: here.h };
-  for (const [name, side] of [['O', sO], ['I', -sO]]) {
-    const a = stepAt(keysAround(d, name, b), b), z = Math.sin(Math.PI * a.u) * a.k[3];
+  for (const { name, side, a, z, p: p0, dh } of feet) {
     const heel = lerp(a.prev[4] ?? 0, a.k[4] ?? 0, inOut(a.u)); // a toe tap's heel stays up
     const hip = Lw(pf, ps + side * 2.1, pz);
-    let p = mix(landing(a.prev, side * 2.3), landing(a.k, side * 2.3), a.long ? smooth(a.u) : inOut(a.u));
+    let p = p0;
     // A foot the body has left behind slides along rather than stretching the leg.
-    const far = Math.sqrt(Math.max(0, (THIGH + SHIN) ** 2 * 0.97 - (pz - 1.3 - z) ** 2)), dh = Math.hypot(p.x - hip.x, p.y - hip.y);
+    const far = Math.sqrt(Math.max(0, LEG2 - (pz - 1.3 - z) ** 2));
     if (dh > far) p = v3(hip.x + ((p.x - hip.x) * far) / dh, hip.y + ((p.y - hip.y) * far) / dh, 0);
     out['ankle' + name] = v3(p.x, p.y, 1.3 + z + heel);
     out['toe' + name] = v3(p.x + here.f.x * 2.6, p.y + here.f.y * 2.6, 0.7 + z * 0.6);
@@ -886,7 +905,7 @@ function reachable(p, a, b) {
 // The guapea grip: down and out on 1, up on 5.
 function guapeaGrip(L, F, t) {
   const m = mix(L.shO, F.shO, 0.5), o = norm(v3(m.x, m.y, 0));
-  const jz = 13.5 + (track(JOINED_Z, t, 0.42, 0.2) - 13.5) * P.arms - (L.dp + F.dp) / 2;
+  const jz = 13.5 + STAND * P.stand + (track(JOINED_Z, t, 0.42, 0.2) - 13.5) * P.arms - (L.dp + F.dp) / 2;
   const jo = track(JOINED_OUT, t, 0.42, 0.2) * P.arms;
   return reachable(v3(m.x + o.x * jo, m.y + o.y * jo, jz), L.shO, F.shO);
 }
@@ -894,7 +913,7 @@ function guapeaGrip(L, F, t) {
 // her turn on 6.
 function crossGrip(L, F, t) {
   const m = mix(L.shO, F.shO, 0.5), o = norm(v3(m.x, m.y, 0));
-  const z = 13 - (L.dp + F.dp) / 2 + 3.5 * bump(t, 4.6, 5.3, 6) * P.arms;
+  const z = 13 + STAND * P.stand - (L.dp + F.dp) / 2 + 3.5 * bump(t, 4.6, 5.3, 6) * P.arms;
   return reachable(v3(m.x - o.x * 3, m.y - o.y * 3, z), L.shO, F.shO);
 }
 // The closed hold's joined hands (his left, her right): out on his left side at
