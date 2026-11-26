@@ -525,6 +525,44 @@ function tuyaBars(n) {
     };
   });
 }
+// Adentro y afuera, out of arriba: on the 1 the couples stop walking and,
+// still in the closed hold, open and close like a V, bar after bar (loop)
+// until the next call. On 1 he side-steps in, his left foot toward the
+// center, turning a little toward her (AD_HIM degrees), while she turns a
+// quarter to her right to face the center and steps back out with her
+// right; they rock on 2 and meet in the middle on 3. On 5 the same the other
+// way: he side-steps out with his right and she turns to face out and steps
+// back in with her left; they meet again on 7. It flows on through the 4 and
+// the 8. Keys are [beat, u]: u is how far in he is (1 in, -1 out, 0 in the
+// middle, where they walk). The bars' keys end on 7, so from there they head
+// for wherever the next 1 has them (rootKeys()): in again, or the middle for
+// the next move, which is why a call from here must come by the 5 (call()).
+// He goes in or out AD_IN px and she AD_OUT px. In the hold she is a little
+// outside him, so while he is in they are further apart across the circle,
+// and they come up to AD_GAP px closer along it. The joined hands (pump) are
+// at about shoulder height while he is in and head height while he is out.
+const AD_IN = 3, AD_OUT = 4.5, AD_GAP = 2.5, AD_HIM = 20;
+const adentroKey = (lead) => ([b, u]) => {
+  const k = walk(lead)[0];
+  return [b, k[1], k[2] + (lead ? -AD_IN : AD_OUT) * u, -180 - (lead ? AD_HIM : 90) * u, k[4], k[5] + (lead ? 1 : -1) * AD_GAP * Math.max(0, u)];
+};
+const AD_PUMP = [[0, -0.3], [1, -0.3], [2, 0], [3, 0.3], [4, 0.45], [5, 0.45], [6, 0.1], [7, -0.15]];
+const adentro = (u) => ({
+  shift: 0, travel: 0, flow: true, closed: true, pump: AD_PUMP,
+  lead: { root: u.map(adentroKey(true)), pelvis: [[0, 0]], angle: [[0, 0]], O: [[0, 0, -1, 2.4], [2, 0, 0, 2], [5, 0, 0, 1.2]], I: [[1, 0, 0, 1.2], [4, 0, 1, 2.4], [6, 0, 0, 2]] },
+  follow: { root: u.map(adentroKey(false)), pelvis: [[0, 0]], angle: [[0, 0]], O: [[0, -0.3, 0, 2.4], [2, 0, 0, 2], [5, 0, 0, 1.2]], I: [[1, 0, 0, 1.2], [4, -0.3, 0, 2.4], [6, 0, 0, 2]] },
+});
+const ADENTRO = adentro([[0, 1], [1, 0.8], [2, 0], [4, -1], [5, -0.8], [6, 0]]);
+const ADENTRO_IN = adentro([[0, 0], [1, 0.9], [2, 0], [4, -1], [5, -0.8], [6, 0]]); // from the middle, where they stopped walking
+// The tarrito out of adentro y afuera: the tarrito's arch, and he walks under
+// it past her to the next girl and takes her, but the girls stay where they
+// are, stepping in place, so he walks one place (travel) instead of two.
+// Then they go on in and out.
+const TARRITO_AD = {
+  ...TARRITO, travel: 1,
+  lead: { ...ARRIBA.lead, sway: TARRITO_SWAY, root: tarritoRoot(TARRITO_ALONG.map((a, b) => a - b / 8), TARRITO_OUT) },
+  follow: { ...TARRITO.follow, ...walkSteps(-1, [0, 0, 0]), root: TARRITO.follow.root.map(([b, along, ...r]) => [b, along - b / 8, ...r]) },
+};
 const MOVES = {
   dame: {
     id: 'dame', name: 'DAME', say: '¡Dame!', bars: [DAME],
@@ -578,7 +616,8 @@ const MOVES = {
     id: 'pelota4', name: 'PELOTA DE 4', say: '¡Pelota de cuatro!', bars: [ENCHUFLA, MAMBO_ALL, PELOTA4_TURN, DAME_AFTER_ENCHUFLA],
     blurb: 'An enchufla that stops facing the next girl, a whole bar of mambo, then everyone turns once round to the left in four quarters, clapping on each: 1, 3, 5 and 7. Then a dame with her. Everyone has a new partner.',
   },
-  // from: the moves called from arriba; the rest are called from the guapea.
+  // from: what the rueda must be doing for the move to be called (arriba,
+  // adentro y afuera, or a list); the rest are called from the guapea.
   // loop: after its bars the move goes on with this figure until the next
   // call, and to: what the rueda is doing then.
   arriba: {
@@ -586,7 +625,7 @@ const MOVES = {
     blurb: 'A dile que si: a short extension, then a half turn together into the closed hold. The rueda closes up and every couple walks round the circle, a place a bar, the joined hands pumping, until the next call.',
   },
   dilequeno: {
-    id: 'dilequeno', name: 'DILE QUE NO', say: '¡Dile que no!', bars: [ARRIBA_DILE], from: 'arriba',
+    id: 'dilequeno', name: 'DILE QUE NO', say: '¡Dile que no!', bars: [ARRIBA_DILE], from: ['arriba', 'adentro'],
     blurb: 'Out of the closed hold: she crosses in front of him and they are back in the guapea, with the same partner, where they walked to.',
   },
   tarrito: {
@@ -596,6 +635,20 @@ const MOVES = {
   tuya: {
     id: 'tuya', name: 'TARRITO HASTA LA TUYA', say: '¡Tarrito hasta la tuya!', bars: [], from: 'arriba', loop: ARRIBA, to: 'arriba',
     blurb: 'A tarrito, but he walks on round the inside of the circle, past every girl, until he is back with his own. Then they walk on arriba.',
+  },
+  adentro: {
+    id: 'adentro', name: 'ADENTRO Y AFUERA', say: '¡Adentro y afuera!', bars: [ADENTRO_IN], from: 'arriba', loop: ADENTRO, to: 'adentro',
+    blurb: 'They stop walking and, in the closed hold, he steps in on 1 as she turns to face the center and steps out, and on 5 the other way round, meeting in the middle on 3 and 7. Again and again until the next call.',
+  },
+  // Arriba again out of adentro y afuera: they walk on from the middle.
+  arriba2: {
+    id: 'arriba2', name: 'ARRIBA', say: '¡Arriba!', bars: [ARRIBA], from: 'adentro', loop: ARRIBA, to: 'arriba',
+    blurb: 'Out of adentro y afuera they walk on round the circle in the closed hold, a place a bar, the joined hands pumping, until the next call.',
+  },
+  // loopIn: the loop's first bar after the move's own.
+  tarrito2: {
+    id: 'tarrito2', name: 'TARRITO', say: '¡Tarrito!', bars: [TARRITO_AD], from: 'adentro', loop: ADENTRO, loopIn: ADENTRO_IN, to: 'adentro',
+    blurb: 'The joined hands go up into an arch and he walks under her arm to the next girl, who waits stepping in place. By the 8 he has her in the closed hold, and they go on in and out. Everyone has a new partner.',
   },
 };
 
@@ -618,7 +671,10 @@ function callAt(m) {
   }
   return null;
 }
-const figureAt = (m) => { const c = callAt(m); return c ? (c.loop ? MOVES[c.id].loop : MOVES[c.id].bars[c.bar]) : GUAPEA; };
+const figureAt = (m) => {
+  const c = callAt(m), mv = c && MOVES[c.id];
+  return !c ? GUAPEA : c.loop ? (c.bar === mv.bars.length && mv.loopIn) || mv.loop : mv.bars[c.bar];
+};
 // What a call's figures add up to (key: shift, how many places the girls
 // have moved on clockwise; travel, how many places the couples have walked
 // counterclockwise) before measure m.
@@ -639,8 +695,8 @@ function travelBefore(m) {
   for (const [k, id] of timeline) s += sumOf(k, id, m, 'travel');
   return s;
 }
-// What the rueda is doing between moves at measure m: the guapea, or arriba
-// once it is called and until the dile que no.
+// What the rueda is doing between moves at measure m: the guapea, arriba or
+// adentro y afuera, from the move that took it there until the dile que no.
 function stateAt(m) {
   let last = -Infinity, id = null;
   for (const [k, i] of timeline) if (k < m && k > last) { last = k; id = i; }
@@ -787,14 +843,20 @@ function build() {
 
 // Measure m's root keys. Across the bar line into a figure that flows on
 // from the one before, each side also takes the other's keys, so the curve
-// carries on through it instead of coming to rest on the 8.
+// carries on through it instead of coming to rest on the 8. A key on the bar
+// line that both have is the same key, so it is kept once; a figure whose
+// keys end before the 8 (adentro y afuera) leaves the way on to the next
+// one's.
 function rootKeys(d, m) {
-  const fig = figureAt(m), prev = figureAt(m - 1), next = figureAt(m + 1);
+  const fig = figureAt(m), prev = figureAt(m - 1), next = figureAt(m + 1), own = fig[d.role].root;
   // Another figure's keys on this measure's beats; a follow's along restarts
   // from her new home after a partner change, and everyone's from where the
   // couples have walked to.
   const moved = (f, dt, da, dw) => f[d.role].root.map(([t, along, ...rest]) => [t + dt, along + (d.lead ? 0 : da) + dw, ...rest]);
-  return [...(fig.flow ? moved(prev, -8, prev.shift, -(prev.travel ?? 0)).slice(0, -1) : []), ...fig[d.role].root, ...(next.flow ? moved(next, 8, -fig.shift, fig.travel ?? 0).slice(1) : [])];
+  const before = fig.flow ? moved(prev, -8, prev.shift, -(prev.travel ?? 0)) : [], after = next.flow ? moved(next, 8, -fig.shift, fig.travel ?? 0) : [];
+  if (before.length && before.at(-1)[0] >= own[0][0]) before.pop();
+  if (after.length && after[0][0] <= own.at(-1)[0]) after.shift();
+  return [...before, ...own, ...after];
 }
 
 // The circle's size at beat b, against the guapea's. In arriba the rueda
@@ -1537,13 +1599,15 @@ function call() {
   // Moves are called on 5. A call once the move's preparation has started
   // (on 7) is too late; it waits for the 1 after. A call during a longer
   // move waits for it to end.
-  const mv = MOVES[state.move], first = mv.bars[0], early = -Math.min(0, first.lead.root[0][0], first.follow.root[0][0]);
-  const b = music.beat();
+  // Out of adentro y afuera the couples head on from the 7 to wherever the
+  // next move needs them, so a call must come by the 5.
+  const mv = MOVES[state.move], first = mv.bars[0], b = music.beat();
+  const early = Math.max(-Math.min(0, first.lead.root[0][0], first.follow.root[0][0]), nextState(b) === 'adentro' ? 3 : 0);
   let m = Math.floor((b + early) / 8) + 1;
   const running = callAt(m);
   if (running?.bar > 0 && !running.loop) m += MOVES[running.id].bars.length - running.bar;
   // A loop (arriba) goes on only until the next call.
-  if (mv.bars.some((_, j) => callAt(m + j) && !callAt(m + j).loop) || (mv.from ?? 'guapea') !== stateAt(m)) return music.sfx('nope');
+  if (mv.bars.some((_, j) => callAt(m + j) && !callAt(m + j).loop) || !callableFrom(mv, stateAt(m))) return music.sfx('nope');
   timeline.set(m, state.move);
   state.calledAt = b;
   music.sfx('select');
@@ -1775,11 +1839,13 @@ function title(b) {
 // ------------------------------------------------------------ moves library
 const lib = document.getElementById('moves');
 let libKey = '', libMove = '', libState = '';
-// The list shows only the moves that can be called next: from the guapea, or
-// from arriba. Each keeps its own pick, so after a dile que no the pick from
-// before arriba is back.
+// The list shows only the moves that can be called next: from the guapea,
+// from arriba or from adentro y afuera. Each keeps its own pick, so after a
+// dile que no the pick from before arriba is back.
 const picks = {};
-const available = (st) => Object.values(MOVES).filter((mv) => (mv.from ?? 'guapea') === st).map((mv) => mv.id);
+const callableFrom = (mv, st) => [mv.from ?? 'guapea'].flat().includes(st);
+const available = (st) => Object.values(MOVES).filter((mv) => callableFrom(mv, st)).map((mv) => mv.id);
+const STATE_NAME = { guapea: 'Guapea', arriba: 'Arriba', adentro: 'Adentro y afuera' };
 // What the next call would start from: what the rueda does once the move
 // dancing now, or called for the next 1, is done.
 function nextState(b) {
@@ -1793,7 +1859,7 @@ function buildLibrary(st) {
   libState = st;
   const ids = available(st);
   state.move = ids.includes(picks[st]) ? picks[st] : ids.includes(state.move) ? state.move : ids[0];
-  lib.querySelector('#avail').textContent = `${st === 'arriba' ? 'Arriba' : 'Guapea'} – available moves`;
+  lib.querySelector('#avail').textContent = `${STATE_NAME[st]} – available moves`;
   const list = lib.querySelector('ol');
   list.innerHTML = '';
   ids.map((id) => MOVES[id]).forEach((mv, i) => {
