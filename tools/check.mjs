@@ -15,7 +15,10 @@
 //
 // --against dances the same scenarios at that git commit too and says which
 // moves now dance differently, and from which beat: run it with HEAD before
-// committing to see that a change only touches the moves it should.
+// committing to see that a change only touches the moves it should. The
+// poses it compares are the bodies, hands and feet; with --pictures it also
+// compares the drawn frames every half beat (slower, a few minutes), which
+// proves a change that shouldn't show changes nothing on screen.
 // --query adds URL options, such as '&stand=1' or '&couples=3'.
 import { rm } from 'node:fs/promises';
 import { serve, checkout, launch, open, scenarios, ROOT } from './lib.mjs';
@@ -23,7 +26,7 @@ import { serve, checkout, launch, open, scenarios, ROOT } from './lib.mjs';
 const LIMITS = { pelvis: 2.5, hand: 6, turn: 15, slide: 0.6, close: 4.5 };
 
 const args = process.argv.slice(2), opt = (name) => { const i = args.indexOf(name); return i < 0 ? undefined : args[i + 1]; };
-const against = opt('--against'), only = opt('--only')?.split(','), query = opt('--query') ?? '';
+const against = opt('--against'), only = opt('--only')?.split(','), query = opt('--query') ?? '', pictures = args.includes('--pictures');
 
 // Runs in the page: poses everyone every 0.05 beats from `from` to `to`.
 function measure({ from, to }) {
@@ -64,6 +67,20 @@ function measure({ from, to }) {
   return res;
 }
 
+// Runs in the page: a hash of the frame drawn every half beat.
+async function picture({ from, to }) {
+  const c = document.getElementById('screen'), g = c.getContext('2d'), out = [];
+  for (let s = 0; s <= (to - from) * 2; s++) {
+    window.rueda.seek(from + s / 2);
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const px = new Uint32Array(g.getImageData(0, 0, c.width, c.height).data.buffer);
+    let h = 0;
+    for (let i = 0; i < px.length; i++) h = (h * 31 + px[i]) | 0;
+    out.push(h);
+  }
+  return out;
+}
+
 async function dance(browser, base, sc) {
   const page = await open(browser, base, (sc.call ? `call=${sc.call}` : '') + query);
   try {
@@ -72,6 +89,7 @@ async function dance(browser, base, sc) {
     const known = await page.evaluate((ids) => ids.every((id) => window.rueda.moves[id]), sc.call.split(',').filter(Boolean).map((c) => c.split('@')[0]));
     if (!known) return { missing: true };
     const res = await page.evaluate(measure, sc);
+    if (pictures && against) res.pics = await page.evaluate(picture, sc);
     res.errors = page.errors;
     return res;
   } catch (e) {
@@ -101,8 +119,8 @@ try {
     if (r.pelvis) line += num(r.pelvis[0], LIMITS.pelvis) + num(r.hand[0], LIMITS.hand) + num(r.turn[0], LIMITS.turn) + num(r.slide, LIMITS.slide) + num(r.close[0], LIMITS.close, true);
     if (old && r.prints) {
       const o = await dance(browser, old.url, sc);
-      const i = o.prints ? r.prints.findIndex((h, k) => h !== o.prints[k]) : -1;
-      line += o.missing ? 'new' : !o.prints ? 'could not dance it there' : i < 0 ? 'same' : `changed from beat ${(sc.from + i * 0.05).toFixed(2)}`;
+      const i = o.prints ? r.prints.findIndex((h, k) => h !== o.prints[k]) : -1, j = r.pics ? r.pics.findIndex((h, k) => h !== o.pics?.[k]) : -1;
+      line += o.missing ? 'new' : !o.prints ? 'could not dance it there' : i >= 0 ? `changed from beat ${(sc.from + i * 0.05).toFixed(2)}` : j >= 0 ? `drawn differently from beat ${sc.from + j / 2}` : 'same';
     }
     console.log(line);
     if (r.pelvis) console.log(pad('', 16) + `worst: pelvis ${r.pelvis[1]}, hand ${r.hand[1]}, turn ${r.turn[1]}, slide ${r.worst[0].toFixed(2)} ${r.worst[1]}, close ${r.close[1]}`);
