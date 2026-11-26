@@ -582,6 +582,35 @@ const exhibo = (u, her) => ({
 });
 const EXHIBO = exhibo(AD_U, [[0, 1], [1, 0.8, -270]]);
 const EXHIBO_IN = exhibo(AD_U_IN, [[0, 0], [1, 0.9]]);
+
+// The setenta corrido's extra bar, after the setenta's lock (here, once
+// PLACE is known). Her left arm stays wrapped behind her back (wrapped) and
+// the other hands low in front, as at the end of the lock, and the couple
+// walks once round the middle between them, clockwise (to their right):
+// easing in on 1, at an even pace through the 4, easing out by the 8, a
+// step on every count. It flows on from her turn (flow), and both keep
+// facing each other all the way round (aim undoes the turn that going round
+// the circle would add), so the hold stays the same.
+const CORRIDO_V = 360 / 7; // degrees a beat
+const corridoAt = (b) => (b < 1 ? (CORRIDO_V * b * b) / 2 : b > 7 ? 360 - (CORRIDO_V * (8 - b) ** 2) / 2 : CORRIDO_V * (b - 0.5));
+// Each one's spot as [px counterclockwise, px out] from the couple's place.
+const corridoSpot = (lead) => { const [, al, out] = SETENTA_LOCK[lead ? 'lead' : 'follow'].root.at(-1); return [((lead ? 1 : -1) * DIST) / 2 + al * PLACE, out]; };
+function corrido(lead) {
+  const me = corridoSpot(lead), her = corridoSpot(!lead), c = [(me[0] + her[0]) / 2, (me[1] + her[1]) / 2], dt = me[0] - c[0], dn = me[1] - c[1];
+  const [, al0, , turn0] = SETENTA_LOCK[lead ? 'lead' : 'follow'].root.at(-1);
+  return Array.from({ length: 17 }, (_, i) => {
+    const b = i / 2, a = corridoAt(b) * DEG, t = c[0] - dn * Math.sin(a) + dt * Math.cos(a);
+    const along = (t - ((lead ? 1 : -1) * DIST) / 2) / PLACE;
+    return [b, along, c[1] + dn * Math.cos(a) + dt * Math.sin(a), turn0 - corridoAt(b), al0 - along];
+  });
+}
+const CORRIDO_STEPS = { pelvis: [[0, 0]], angle: [[0, 0]], O: [[0, 0, 0, 2.2], [2, 0, 0, 2.2], [5, 0, 0, 2.2], [7, 0, 0, 1.6]], I: [[1, 0, 0, 2.2], [3, 0, 0, 1.6], [4, 0, 0, 2.2], [6, 0, 0, 2.2]] };
+const SETENTA_CORRIDO = {
+  shift: 0, straight: true, wrapped: true, flow: true,
+  lead: { ...CORRIDO_STEPS, root: corrido(true) },
+  follow: { ...CORRIDO_STEPS, root: corrido(false) },
+};
+
 const MOVES = {
   dame: {
     id: 'dame', name: 'DAME', say: '¡Dame!', bars: [DAME],
@@ -602,6 +631,10 @@ const MOVES = {
   setenta: {
     id: 'setenta', name: 'SETENTA', say: '¡Setenta!', bars: [SETENTA_LOCK, SETENTA_ENCHUFLA, SETENTA_TURNS, SETENTA_DILE, DAME],
     blurb: 'Both hands: an exhíbela that wraps her left arm behind her back, an enchufla without letting go that unwinds it, then his enchufla and hers, round like gears. A dile que no hands her on, then a dame. Everyone has a new partner.',
+  },
+  setentacorrido: {
+    id: 'setentacorrido', name: 'SETENTA CORRIDO', say: '¡Setenta corrido!', bars: [SETENTA_LOCK, SETENTA_CORRIDO, SETENTA_ENCHUFLA, SETENTA_TURNS, SETENTA_DILE, DAME],
+    blurb: 'A setenta, but once her arm is wrapped behind her back the couple walks once round each other, clockwise, still wrapped. Then the rest of the setenta. Everyone has a new partner.',
   },
   uno: {
     id: 'uno', name: 'UNO', say: '¡Uno!', bars: [UNO, UNO_CORONACION, DILE_QUE_NO, DAME],
@@ -1178,10 +1211,11 @@ function hands(b) {
     // (mine) for his. Her left hand goes round her and behind her back as
     // she turns in the first bar (lock), with his right arm round her right
     // side holding it, and comes back round in front as she turns back in
-    // the second (unlock). In the third he lets go with his left for his
-    // turn (offO) and with his right for hers (offI).
+    // the second (unlock); in the setenta corrido's bar in between it stays
+    // there (wrapped). In the third he lets go with his left for his turn
+    // (offO) and with his right for hers (offI).
     const high = win(fig.high), mine = win(fig.mine), offO = win(fig.offO), offI = fig.offI ? ramp(t, ...fig.offI) : 0;
-    const u = fig.lock ? 1 - (1 - ramp(t, ...fig.lock)) ** 2 : fig.unlock ? 1 - ramp(t, ...fig.unlock) : 0;
+    const u = fig.lock ? 1 - (1 - ramp(t, ...fig.lock)) ** 2 : fig.unlock ? 1 - ramp(t, ...fig.unlock) : fig.wrapped ? 1 : 0;
     const locked = smooth(clamp((u - 0.3) / 0.45, 0, 1));
     for (let i = 0; i < n; i++) {
       const L = leads[i].pose, F = follows[mod(i + s, n)].pose;
@@ -1192,6 +1226,7 @@ function hands(b) {
       let I = mix(g.I, reachable(over(F.shI, L, L.head.z + 6), L.shI, F.shI), mine);
       if (fig.lock) I = reachable(mix(mix(I, v3(I.x, I.y, I.z - 1.5), ramp(t, ...fig.low)), lockPath(F, u), ramp(t, 3.4, 4.4)), L.shI, F.shI);
       if (fig.unlock) I = reachable(mix(lockPath(F, u), I, ramp(t, 5.8, 6.8)), L.shI, F.shI);
+      if (fig.wrapped) I = reachable(lockPath(F, 1), L.shI, F.shI);
       aim(L, mix(O, rest(L, L.d.sO), offO), mix(I, styled(L, t), offI));
       aim(F, mix(O, rest(F, F.d.sO), offO), mix(I, styled(F, t), offI));
       if (locked > 0) {
