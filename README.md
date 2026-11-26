@@ -34,6 +34,17 @@ Moves live in `MOVES` in `guapea/main.js`. A move is one or more bars of 8 count
 - The tune panel's sliders (tempo, bounce, straight legs, hips, step size, arm swing, styling, timing, springiness, looseness, couples) are saved in the URL, so a tuned version can be shared as a link.
 - URL options: `?beat=N` freezes the clock at a beat (count 1 is beat 0), `?call=dame` queues that move from the second measure (beat 8 on; the enchufla and the pelotas run to beat 24, `?call=doble` and `?call=dobleplay` to beat 32, `?call=sombrero`, `?call=uno` and `?call=pelota4` to beat 40, `?call=setenta` and `?call=pelota` to beat 48, and `?call=setentacorrido` and `?call=festival` to beat 56; several calls go in a list, each from the given measure or right after the one before, so `?call=arriba,dilequeno@4` walks arriba on beats 16-31 and the dile que no runs to beat 40, `?call=arriba,tarrito@3,dilequeno@5` has the tarrito on beats 24-31, `?call=arriba,tuya@3,dilequeno@8` has the tarrito hasta la tuya on beats 24-63 with eight couples, and `?call=arriba,adentro@3,tarrito2@5,dilequeno@7` dances adentro y afuera from beat 24, its tarrito on beats 40-47 and the dile que no on beats 56-63; `?call=arriba,adentro@3,exhibo@5,dilequeno@7` has la exhibo on beats 32-39; `arriba2` is arriba out of adentro y afuera, and `exhibo2` la exhibo out of arriba), `?play=1` skips the title, `?role=follow`, `?move=enchufla` selects a move.
 
+## Tools
+
+`tools/` has checks for working on the moves. They run the game in a headless Chromium with Playwright, so run `npm install` and `npx playwright install chromium` once first.
+
+- `npm run check` dances every move in the library, each from the guapea, arriba or adentro y afuera as it needs, and reports per move: the biggest jump from one 0.05-beat step to the next of any pelvis, hand or heading (a snap), how far planted feet slide, how close any two dancers come, and anything the page throws. A number past the limits at the top of `tools/check.mjs` is marked with `!` and the command fails; the limits sit just above the worst the moves had when the tools were added, so they catch a move getting worse.
+  - `npm run check -- --against HEAD` also dances them at that commit and says which moves now dance differently and from which beat, so a change can be seen to touch only the moves it should.
+  - `--only setenta,uno` checks just those moves; `--query '&stand=1'` adds URL options.
+- `npm run strip -- out.png setentacorrido 2 15 16 17 18` draws couple 2 (lead 2 and the girl nearest him) alone at those beats, side by side, labeled with the counts. The calls are what `?call=` takes (`''` for the guapea); `--all` draws everyone.
+
+For them the game exposes `window.rueda`, with `pose(beat)` to pose everyone without drawing, `only(f)` to draw just the dancers `f` picks, and `moves`, `leads()`, `follows()`, `seek(beat)` and `proj`.
+
 Everything below is the earlier work, listed at `prototypes.html`.
 
 ## Coin-op cabinets

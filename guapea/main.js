@@ -1643,6 +1643,7 @@ function buildPlaza() {
 const music = new ChipMusic(P.bpm, 'fm');
 music.layers = { band: true, melody: true };
 let frozen = q.has('beat') ? +q.get('beat') : null;
+let only = null; // for the tools (window.rueda.only): draw just the dancers it picks
 const beatNow = () => frozen ?? music.beat();
 const state = {
   mode: q.has('play') || frozen !== null ? 'play' : 'title',
@@ -1782,14 +1783,14 @@ function frame(now) {
 }
 
 function render(b, dt) {
-  const t = mod(b, 8), cnt = Math.floor(t);
+  const t = mod(b, 8), cnt = Math.floor(t), shown = dancers().filter((d) => !only || only(d));
   ctx.drawImage(bg, 0, 0);
   const img = ctx.getImageData(0, 0, W, H), out = new Uint32Array(img.data.buffer);
   // The ring lights up on every 1.
   if (t < 0.3) for (const [i, idx] of ringPixels.entries()) if (t < 0.15 || (i & 1)) out[idx] = FLASH;
   // Shadows, and a gold ring under you.
   const me = player();
-  for (const d of dancers()) {
+  for (const d of shown) {
     const B = d.pose, c = proj(v3(B.pelvis.x, B.pelvis.y, 0)), rx = 7.5 + B.dp * 0.4, ry = rx * 0.45;
     if (d === me) ellipse(out, c.x, c.y, 12 + (t % 1 < 0.15 ? 1 : 0), 5.5 + (t % 1 < 0.15 ? 0.5 : 0), pack(GOLD[2]));
     for (let y = Math.floor(c.y - ry); y <= c.y + ry; y++) for (let x = Math.floor(c.x - rx); x <= c.x + rx; x++) {
@@ -1803,7 +1804,7 @@ function render(b, dt) {
   // A hand on someone's back shows over them when their back is to the
   // camera, and hides behind them when it isn't.
   const around = new Map();
-  for (const d of dancers()) for (const [n, { on, w }] of Object.entries(d.pose.around || {})) {
+  for (const d of shown) for (const [n, { on, w }] of Object.entries(d.pose.around || {})) {
     if (w <= 0.5) continue;
     const k = on.f.x * TO_CAM.x + on.f.y * TO_CAM.y < 0 ? 'after' : 'before';
     if (!around.has(on)) around.set(on, { before: [], after: [] });
@@ -1811,7 +1812,7 @@ function render(b, dt) {
   }
   // In crossed hands, the top pair's forearms show over both partners.
   const drawn = new Set();
-  dancers().sort((a, c) => depth(c.pose.pelvis) - depth(a.pose.pelvis)).forEach((d) => {
+  shown.sort((a, c) => depth(c.pose.pelvis) - depth(a.pose.pelvis)).forEach((d) => {
     const w = around.get(d.pose), top = d.pose.top;
     w?.before.forEach((f) => f());
     drawDancer(d, d.pose, d.pose.arms);
@@ -2068,5 +2069,8 @@ buildPlaza();
 buildPanel();
 buildLibrary(nextState(beatNow()));
 fit();
-window.rueda = { P, state, music, timeline, leads: () => leads, follows: () => follows, seek: (b) => { frozen = b; }, call };
+// For the tools (tools/): pose poses everyone for a beat right away, without
+// drawing; only picks the dancers to draw; proj is the screen position of a
+// point on the floor plan.
+window.rueda = { P, state, music, timeline, moves: MOVES, leads: () => leads, follows: () => follows, seek: (b) => { frozen = b; }, call, pose: (b) => poseAll(b, 0), only: (f) => { only = f; }, proj };
 requestAnimationFrame(frame);
