@@ -1,19 +1,12 @@
 {
   "name": "rueda",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "An arcade rueda de casino game",
+  "private": true,
+  "type": "module",
   "scripts": {
     "check": "node tools/check.mjs",
     "strip": "node tools/strip.mjs"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "three": "^0.187.0"
-  },
-  "type": "module",
   "devDependencies": {
     "playwright": "^1.65.1"
   }

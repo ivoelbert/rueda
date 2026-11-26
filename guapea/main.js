@@ -11,21 +11,20 @@
 // moves list, the keys and the tune panel. The moves are in moves.js and
 // figures/, the bodies in body.js, the hands in hands.js.
 
-import { centerText, drawText, textWidth } from '../shared/font.js';
-import { ChipMusic } from '../shared/chip.js';
 import { OUTLINE, body, build, dancers, follows, leads } from './body.js';
 import { arm, drawDancer, spr, spring } from './draw.js';
 import { GUAPEA } from './figures/guapea.js';
+import { centerText, drawText, textWidth } from './font.js';
 import { clapHands, crossPrep, hands, palms, reach, shineHands, sparks } from './hands.js';
 import { P, SPEC, q } from './knobs.js';
 import { H, OY, TAU, TO_CAM, W, depth, mod, proj, v3 } from './math.js';
 import { MOVES } from './moves.js';
+import { Music } from './music.js';
 import { CREAM, FLASH, GOLD, bg, buildPlaza, pack, ringPixels, strands } from './plaza.js';
 import { callAt, callableFrom, figureAt, fold, nextState, shiftBefore, stateAt, timeline } from './timeline.js';
 
 // ------------------------------------------------------------ game state
-const music = new ChipMusic(P.bpm, 'fm');
-music.layers = { band: true, melody: true };
+const music = new Music(P.bpm);
 let frozen = q.has('beat') ? +q.get('beat') : null;
 let only = null; // for the tools (window.rueda.only): draw just the dancers it picks
 const beatNow = () => frozen ?? music.beat();

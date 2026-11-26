@@ -2,9 +2,9 @@
 
 An arcade rueda de casino game.
 
-## Guapea and the moves library (current)
+## The game
 
-`guapea/` is an isometric pixel rueda that dances the guapea in unison, tuned for feel rather than accuracy. The root page opens it, and it's live at https://ivoelbert.github.io/rueda/guapea/.
+`guapea/` is an isometric pixel rueda that dances the guapea in unison, tuned for feel rather than accuracy. It's live at https://ivoelbert.github.io/rueda/guapea/, and the site's root page opens it.
 
 The moves library on the left lists the calls. Pick one and press Space (or tap the game): the whole rueda dances it from the next 1, then goes back to the guapea, or for a call such as Arriba keeps doing what the call leads to until the next one. As in a real rueda, call on 5: a move prepares on the 7 and 8 before its 1, so a call made on 7 or 8 waits for the 1 after. A second call can be queued while a move is running; during a longer move it waits for the move to end. The list shows only the moves that can be called next, under "Guapea – available moves", "Arriba – available moves" or "Adentro y afuera – available moves".
 
@@ -54,7 +54,10 @@ The comment above each figure in `guapea/figures/` says what happens on every co
 - `timeline.js`: the calls, which figure dances in which measure, and what the rueda does between moves.
 - `body.js`: the dancers, where each one is (`root()`), and their bodies, legs and feet (`body()`).
 - `hands.js`: where every hand goes, one function per kind of hold.
-- `draw.js` and `plaza.js`: drawing the dancers and the floor.
+- `draw.js` and `plaza.js`: drawing the dancers and the floor; `sprite.js` turns the strokes into palette pixel sprites, and `font.js` is the HUD's 5x7 bitmap font.
+- `music.js`: the casino band on an FM sound chip, the sound effects, and the beat clock everything reads.
+
+Outside it: `index.html` sends the site's root page to the game, `.nojekyll` tells GitHub Pages to serve the files as they are, `tools/` has the checks below, and `serve.py` serves the site locally.
 
 ## Tools
 
@@ -67,37 +70,8 @@ The comment above each figure in `guapea/figures/` says what happens on every co
 
 For them the game exposes `window.rueda`, with `pose(beat)` to pose everyone without drawing, `only(f)` to draw just the dancers `f` picks, and `moves`, `leads()`, `follows()`, `seek(beat)` and `proj`.
 
-Everything below is the earlier work, listed at `prototypes.html`.
-
-## Coin-op cabinets
-
-- `arcade83/`: an early-80s vertical maze board (224x288). Top-down rueda, Namco-style wavetable band.
-- `arcade86/`: a mid-80s sports coin-op (256x224). Wooden stage, bleachers, lamp scoreboard, NES-style band.
-- `arcade92/`: an early-90s fighter (384x224). Side-on plaza, SABOR bars, 99 timer, FM band.
-
-Each one runs the full loop: attract mode (title and demo pages), insert coin, pick lead or follow, a 99-second round, then game over. The hi-score is saved in localStorage.
-
-Keys: Space/Enter/Z = the big ¡ENCHUFLA DOBLE! button, 5/C = coin, arrows or A/D = lead/follow, S = ½× práctica.
-
-## Shared code
-
-- `shared/dance.js`: the choreography (guapea, media enchufla, enchufla, dile que no) as keyframes per count, footwork, and the IK skeleton every version draws.
-- `shared/game.js`: beat clock, call queue, timing judgment and score. The earlier prototypes also use its HTML HUD.
-- `shared/audio.js`: synthesized casino band (clave, campana, congas, bass, piano) and sound effects.
-- `shared/chip.js`: the same band on three sound chips (namco, nes, fm), plus a brass hook and coin-op sound effects.
-- `shared/arcade.js`, `shared/arcade.css`: the cabinet (marquee, CRT, bezel cards, control panel) and the attract → select → play → over loop.
-- `shared/sprite.js`: low-res sprite drawing snapped to a palette. `shared/font.js`: the 5x7 bitmap font.
-
-## Earlier prototypes
-
-`neon/`, `pixel/` and `toon/`. `toon/` uses three.js from `vendor/`.
-
 ## Running
 
 Run `python3 serve.py 8000` and open http://localhost:8000/. The site is plain static files, deployed to GitHub Pages from `main`.
 
-URL options:
-- `?beat=18` freezes the clock at a beat. The enchufla doble runs from beat 8 to beat 32.
-- `?role=follow`
-- Cabinets only: `?state=attract|select|ready|play|over`, `?page=title|demo`, `?heat=0..1`.
-- Earlier prototypes only: `?cam=close`, `?autoplay`.
+The first style prototypes (three arcade cabinets, neon, pixel and toon) are in the git history up to commit a3b3089.

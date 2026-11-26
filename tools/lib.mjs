@@ -28,11 +28,10 @@ export function serve(dir) {
   return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve({ url: `http://127.0.0.1:${server.address().port}`, close: () => server.close() })));
 }
 
-// The game (guapea/ and shared/) as it is at a git commit, in a temporary
-// directory.
+// The repo as it is at a git commit, in a temporary directory.
 export async function checkout(ref) {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'rueda-'));
-  const tar = execFileSync('git', ['archive', '--format=tar', ref, 'guapea', 'shared'], { cwd: ROOT, maxBuffer: 1 << 30 });
+  const tar = execFileSync('git', ['archive', '--format=tar', ref], { cwd: ROOT, maxBuffer: 1 << 30 });
   execFileSync('tar', ['-x', '-C', dir], { input: tar });
   return dir;
 }

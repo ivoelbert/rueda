@@ -1,10 +1,10 @@
 // Drawing a dancer as pixel sprites: limbs, skirt, head and hat, with the
 // skirts and hats lagging behind on springs.
 
-import { Sprites, hull } from '../shared/sprite.js';
 import { BAND, DRESS, EYE, FLOWER, HAIR, HAT, HEAD_R, HEELS, MOUTH, OUTLINE, PANTS, SHIRT, SHOES, SKIN, TRIM } from './body.js';
 import { P } from './knobs.js';
 import { H, TAU, TO_CAM, W, clamp, depth, lerp, mix, mod, proj, v3 } from './math.js';
+import { Sprites, hull } from './sprite.js';
 
 export const spr = new Sprites(W, H, [SKIN, HAIR, SHIRT, PANTS, DRESS, [HAT], [BAND], [SHOES], [HEELS], [FLOWER], [[EYE, MOUTH, TRIM]]].flat(3), { outline: OUTLINE, shade: 1, line: 1 });
 

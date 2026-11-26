@@ -1,4 +1,4 @@
-# Static server for the prototypes that disables caching, so edits show up on reload.
+# Static server for the site that disables caching, so edits show up on reload.
 import http.server, os, sys
 
 class NoCache(http.server.SimpleHTTPRequestHandler):

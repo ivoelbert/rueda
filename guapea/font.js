@@ -1,4 +1,4 @@
-// 5x7 bitmap font for the in-canvas HUDs of the pixel and arcade versions.
+// 5x7 bitmap font for the HUD.
 const GLYPHS = {
   A: '.###.|#...#|#...#|#####|#...#|#...#|#...#', B: '####.|#...#|#...#|####.|#...#|#...#|####.',
   C: '.###.|#...#|#....|#....|#....|#...#|.###.', D: '####.|#...#|#...#|#...#|#...#|#...#|####.',
