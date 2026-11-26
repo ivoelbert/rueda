@@ -41,7 +41,7 @@ const rng = (seed) => () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(
 const SPEC = {
   bpm: [200, 120, 220, 1, 'Tempo (BPM)'],
   bounce: [1, 0, 2.5, 0.05, 'Knee bounce'],
-  stand: [1, 0, 1.5, 0.05, 'Straight legs'],
+  stand: [1.5, 0, 2, 0.05, 'Straight legs'],
   hips: [1, 0, 2.5, 0.05, 'Hips'],
   step: [1, 0.3, 2, 0.05, 'Step size'],
   arms: [1, 0, 2, 0.05, 'Arm swing'],
@@ -552,8 +552,9 @@ const adentro = (u) => ({
   lead: { root: u.map(adentroKey(true)), pelvis: [[0, 0]], angle: [[0, 0]], O: [[0, 0, -1, 2.4], [2, 0, 0, 2], [5, 0, 0, 1.2]], I: [[1, 0, 0, 1.2], [4, 0, 1, 2.4], [6, 0, 0, 2]] },
   follow: { root: u.map(adentroKey(false)), pelvis: [[0, 0]], angle: [[0, 0]], O: [[0, -0.3, 0, 2.4], [2, 0, 0, 2], [5, 0, 0, 1.2]], I: [[1, 0, 0, 1.2], [4, -0.3, 0, 2.4], [6, 0, 0, 2]] },
 });
-const ADENTRO = adentro([[0, 1], [1, 0.8], [2, 0], [4, -1], [5, -0.8], [6, 0]]);
-const ADENTRO_IN = adentro([[0, 0], [1, 0.9], [2, 0], [4, -1], [5, -0.8], [6, 0]]); // from the middle, where they stopped walking
+const AD_U = [[0, 1], [1, 0.8], [2, 0], [4, -1], [5, -0.8], [6, 0]], AD_U_IN = [[0, 0], [1, 0.9], ...AD_U.slice(2)];
+const ADENTRO = adentro(AD_U);
+const ADENTRO_IN = adentro(AD_U_IN); // from the middle, where they stopped walking
 // The tarrito out of adentro y afuera: the tarrito's arch, and he walks under
 // it past her to the next girl and takes her, but the girls stay where they
 // are, stepping in place, so he walks one place (travel) instead of two.
@@ -563,6 +564,24 @@ const TARRITO_AD = {
   lead: { ...ARRIBA.lead, sway: TARRITO_SWAY, root: tarritoRoot(TARRITO_ALONG.map((a, b) => a - b / 8), TARRITO_OUT) },
   follow: { ...TARRITO.follow, ...walkSteps(-1, [0, 0, 0]), root: TARRITO.follow.root.map(([b, along, ...r]) => [b, along - b / 8, ...r]) },
 };
+// La exhibo, out of adentro y afuera (EXHIBO) or out of arriba (EXHIBO_IN,
+// where they stop walking for it): on 1-2-3 the in and out of adentro y
+// afuera, but she stays facing the center (her keys' third value is her
+// turn) and on 4 walks on forward into it. On 5, as he steps out, he lifts
+// the joined hands (his left, the inside one) over her head (exhibo: [up
+// from, up by, down from, down by]), she reaches out to the center with her
+// free left arm (reachOut, the same), and on 5-6-7 she turns once round to
+// her right under them. She ends a whole turn round (-360 degrees), facing
+// the center for the next 1 (see rootKeys()). For the turn they let go of
+// each other's backs (backs, the same). Then they go on in and out.
+const exhiboKey = ([b, u, turn]) => { const k = adentroKey(false)([b, u]); if (turn !== undefined) k[3] = turn; return k; };
+const EXHIBO_TURN = [[2, 0, -270], [3, -0.55, -272], [4, -1, -295], [5, -0.85, -450], [6, 0, -610]];
+const exhibo = (u, her) => ({
+  ...adentro(u), whoosh: [4], exhibo: [3.8, 4.4, 6, 6.8], backs: [3.2, 3.8, 6.2, 7.2], reachOut: [3.3, 4, 4.5, 5.2],
+  follow: { ...adentro(u).follow, root: [...her, ...EXHIBO_TURN].map(exhiboKey), O: [[0, -0.3, 0, 2.4], [2, 0.2, 0, 2], [5, 0, 0, 1.6]], I: [[1, 0, 0, 1.2], [4, 0.3, 0, 2.4], [6, 0, 0, 2]] },
+});
+const EXHIBO = exhibo(AD_U, [[0, 1], [1, 0.8, -270]]);
+const EXHIBO_IN = exhibo(AD_U_IN, [[0, 0], [1, 0.9]]);
 const MOVES = {
   dame: {
     id: 'dame', name: 'DAME', say: '¡Dame!', bars: [DAME],
@@ -649,6 +668,15 @@ const MOVES = {
   tarrito2: {
     id: 'tarrito2', name: 'TARRITO', say: '¡Tarrito!', bars: [TARRITO_AD], from: 'adentro', loop: ADENTRO, loopIn: ADENTRO_IN, to: 'adentro',
     blurb: 'The joined hands go up into an arch and he walks under her arm to the next girl, who waits stepping in place. By the 8 he has her in the closed hold, and they go on in and out. Everyone has a new partner.',
+  },
+  // La exhibo out of adentro y afuera, and out of arriba (exhibo2).
+  exhibo: {
+    id: 'exhibo', name: 'LA EXHIBO', say: '¡La exhibo!', bars: [EXHIBO], from: 'adentro', loop: ADENTRO, to: 'adentro',
+    blurb: 'On 1-2-3 the in and out, but she stays facing the center and walks on into it. On 5 he lifts the joined hands, she reaches out to the center with her free arm and turns once round under them. Then they go on in and out.',
+  },
+  exhibo2: {
+    id: 'exhibo2', name: 'LA EXHIBO', say: '¡La exhibo!', bars: [EXHIBO_IN], from: 'arriba', loop: ADENTRO, to: 'adentro',
+    blurb: 'They stop walking and go in and out, but on 2-3 she stays facing the center and walks on into it. On 5 he lifts the joined hands, she reaches out to the center with her free arm and turns once round under them. Then they go on in and out.',
   },
 };
 
@@ -796,9 +824,10 @@ const spr = new Sprites(W, H, [SKIN, HAIR, SHIRT, PANTS, DRESS, [HAT], [BAND], [
 const ARM = [6.8, 6.6], THIGH = 6.4, SHIN = 6.2, HEAD_R = 5.8;
 const LEG2 = (THIGH + SHIN) ** 2 * 0.97; // the furthest a leg reaches, squared
 // Hip height above the ankles (1.3) against the leg's length is how bent the
-// knees are standing: hipZ, crouched, and STAND * P.stand higher (about 145
+// knees are standing: hipZ, crouched, and STAND * P.stand higher (about 150
 // degrees at the knee). DIP: how far the knees dip on each step (dip()).
-// SINK: how far the hips may come down for a wide step.
+// SINK: how far below their height at Straight legs 1 the hips may come down
+// for a wide step, so straighter legs still reach as far.
 const STAND = 2.2, DIP = 1.3, SINK = 2.5;
 const softMin = (a, b, k) => { const h = Math.max(k - Math.abs(a - b), 0) / k; return Math.min(a, b) - (h * h * k) / 4; };
 const FRONT = (225 * Math.PI) / 180; // the couple nearest the camera, seen side-on
@@ -846,14 +875,19 @@ function build() {
 // carries on through it instead of coming to rest on the 8. A key on the bar
 // line that both have is the same key, so it is kept once; a figure whose
 // keys end before the 8 (adentro y afuera) leaves the way on to the next
-// one's.
+// one's. A figure that ends a whole turn round (la exhibo) flows on into the
+// next one's turn the same way: its turns are taken a whole turn on too.
 function rootKeys(d, m) {
   const fig = figureAt(m), prev = figureAt(m - 1), next = figureAt(m + 1), own = fig[d.role].root;
   // Another figure's keys on this measure's beats; a follow's along restarts
   // from her new home after a partner change, and everyone's from where the
-  // couples have walked to.
-  const moved = (f, dt, da, dw) => f[d.role].root.map(([t, along, ...rest]) => [t + dt, along + (d.lead ? 0 : da) + dw, ...rest]);
-  const before = fig.flow ? moved(prev, -8, prev.shift, -(prev.travel ?? 0)) : [], after = next.flow ? moved(next, 8, -fig.shift, fig.travel ?? 0) : [];
+  // couples have walked to; turns as near as they come to this one's (the
+  // key at its edge next to this one's ref).
+  const moved = (f, dt, da, dw, edge, ref) => {
+    const keys = f[d.role].root, w = 360 * Math.round((ref[3] - keys.at(edge)[3]) / 360);
+    return keys.map(([t, along, out, turn, ...rest]) => [t + dt, along + (d.lead ? 0 : da) + dw, out, turn + w, ...rest]);
+  };
+  const before = fig.flow ? moved(prev, -8, prev.shift, -(prev.travel ?? 0), -1, own[0]) : [], after = next.flow ? moved(next, 8, -fig.shift, fig.travel ?? 0, 0, own.at(-1)) : [];
   if (before.length && before.at(-1)[0] >= own[0][0]) before.pop();
   if (after.length && after[0][0] <= own.at(-1)[0]) after.shift();
   return [...before, ...own, ...after];
@@ -914,7 +948,7 @@ function body(d, b) {
   // SINK) only as far as a foot out in a wide step needs to reach the floor:
   // a foot in the air hands over from where it took off to where it will
   // land, so they start coming down as it swings out.
-  const hz = d.hipZ + STAND * P.stand - dp, low = hz - SINK;
+  const hz = d.hipZ + STAND * P.stand - dp, low = d.hipZ + STAND * Math.min(P.stand, 1) - dp - SINK;
   const feet = [['O', sO], ['I', -sO]].map(([name, side]) => {
     const a = stepAt(keysAround(d, name, b), b), z = Math.sin(Math.PI * a.u) * a.k[3];
     const hip = Lw(pf, ps + side * 2.1, 0), from = landing(a.prev, side * 2.3), to = landing(a.k, side * 2.3), p = mix(from, to, a.long ? smooth(a.u) : inOut(a.u));
@@ -1211,6 +1245,24 @@ function hands(b) {
     const hold = fig.closed === true ? 1 : ramp(t, ...fig.closed), keys = [];
     for (let mm = m - 1; mm <= m + 1; mm++) for (const [c, v] of figureAt(mm).pump ?? [[0, 0]]) keys.push([mm * 8 + c, v]);
     const a = activeAbs(keys, b, 0.4, 0.2), pump = lerp(a.prev[1], a.k[1], inOut(a.u));
+    if (fig.exhibo) {
+      // La exhibo (see EXHIBO): the joined hands go up over her head for her
+      // turn, she reaches out to the center, and they let go of each other's
+      // backs for it.
+      const over = win(fig.exhibo), off = win(fig.backs), out = win(fig.reachOut);
+      for (let i = 0; i < n; i++) {
+        const L = leads[i].pose, F = follows[mod(i + s, n)].pose;
+        for (const B of [L, F]) { B.shO = add(B.shO, v3(0, 0, 1.4 * pump)); B.shI = add(B.shI, v3(0, 0, -0.6 * pump)); }
+        F.shO = add(F.shO, v3(0, 0, 2 * over)); // her shoulder goes up with the arm
+        const top = mix(L.shO, F.head, 0.6), j = mix(closedGrip(L, F, pump), reachable(v3(top.x, top.y, F.head.z + 4), L.shO, F.shO), over);
+        const c = norm(v3(-F.shI.x, -F.shI.y, 0)), point = add(F.shI, v3(c.x * REACH * 0.9, c.y * REACH * 0.9, 1.5));
+        aim(L, j, mix(herBack(F), rest(L, -L.d.sO), off));
+        aim(F, j, add(mix(hisBack(L), mix(rest(F, -F.d.sO), point, out), off), v3(0, 0, 5 * Math.sin(Math.PI * off))));
+        L.around = { I: { on: F, w: 1 - off, side: v3(F.l.x, F.l.y, -0.3) } };
+        F.around = { I: { on: L, w: 1 - off, side: v3(-L.l.x, -L.l.y, 0.2) } };
+      }
+      return;
+    }
     if (fig.tarrito) {
       // The tarrito: on 1 they let go of each other's backs (off) and the
       // joined hands go on up into the arch he walks under. They let
